@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.simibubi.create.AllTileEntities;
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
+import com.simibubi.create.content.contraptions.fluids.CombinedFluidHandler;
 import com.simibubi.create.content.contraptions.processing.BasinTileEntity.BasinInventory;
 import com.simibubi.create.foundation.advancement.AllTriggers;
 import com.simibubi.create.foundation.advancement.SimpleTrigger;
@@ -22,6 +23,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
@@ -32,8 +35,9 @@ public abstract class BasinOperatingTileEntity extends KineticTileEntity {
 	public DeferralBehaviour basinChecker;
 	public boolean basinRemoved;
 	protected IRecipe<?> lastRecipe;
-	protected LazyOptional<IItemHandler> basinInv = LazyOptional.empty();
-	protected List<ItemStack> inputs;
+	protected LazyOptional<IItemHandler> basinItemInv = LazyOptional.empty();
+	protected LazyOptional<IFluidHandler> basinFluidInv = LazyOptional.empty();
+	protected MultiIngredientTypeList inputs;
 
 	public BasinOperatingTileEntity(TileEntityType<?> typeIn) {
 		super(typeIn);
@@ -55,17 +59,19 @@ public abstract class BasinOperatingTileEntity extends KineticTileEntity {
 	}
 
 	public void gatherInputs() {
-		if (!basinInv.isPresent())
-			return;
-		BasinInventory inv = (BasinInventory) basinInv.orElse(null);
-		inputs = new ArrayList<>();
-		IItemHandlerModifiable inputHandler = inv.getInputHandler();
-		for (int slot = 0; slot < inputHandler.getSlots(); ++slot) {
-			ItemStack itemstack = inputHandler.extractItem(slot, inputHandler.getSlotLimit(slot), true);
-			if (!itemstack.isEmpty()) {
-				inputs.add(itemstack);
+		inputs = new MultiIngredientTypeList();
+
+		basinItemInv.ifPresent(inv -> {
+			IItemHandlerModifiable inputHandler = ((BasinInventory) inv).getInputHandler();
+			for (int slot = 0; slot < inputHandler.getSlots(); ++slot) {
+				ItemStack itemstack = inputHandler.extractItem(slot, inputHandler.getSlotLimit(slot), true);
+				if (!itemstack.isEmpty()) {
+					inputs.add(itemstack);
+				}
 			}
-		}
+		});
+
+		basinFluidInv.ifPresent(iFluidHandler -> ((CombinedFluidHandler) iFluidHandler).forEachTank(inputs::add));
 	}
 
 	@Override
@@ -91,12 +97,14 @@ public abstract class BasinOperatingTileEntity extends KineticTileEntity {
 		Optional<BasinTileEntity> basinTe = getBasin();
 		if (!basinTe.isPresent())
 			return true;
-		if (!basinInv.isPresent())
-			basinInv = basinTe.get().getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY);
-		if (!basinInv.isPresent())
+		if (!basinItemInv.isPresent())
+			basinItemInv = basinTe.get().getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY);
+		if (!basinFluidInv.isPresent())
+			basinFluidInv = basinTe.get().getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY);
+		if (!basinFluidInv.isPresent() || !basinItemInv.isPresent())
 			return true;
 
-		if (world.isRemote)
+		if (world == null || world.isRemote)
 			return true;
 
 		gatherInputs();
@@ -122,12 +130,10 @@ public abstract class BasinOperatingTileEntity extends KineticTileEntity {
 	public void applyBasinRecipe() {
 		if (lastRecipe == null)
 			return;
-		if (!basinInv.isPresent())
+		if (!basinItemInv.isPresent() || !basinFluidInv.isPresent())
 			return;
 
-		BasinInventory inv = (BasinInventory) basinInv.orElse(null);
-		if (inv == null)
-			return;
+		BasinInventory inv = (BasinInventory) basinItemInv.orElse(null);
 
 		IItemHandlerModifiable inputs = inv.getInputHandler();
 		IItemHandlerModifiable outputs = inv.getOutputHandler();
@@ -153,7 +159,7 @@ public abstract class BasinOperatingTileEntity extends KineticTileEntity {
 			return;
 		}
 		
-		if (!world.isRemote) {
+		if (world != null && !world.isRemote) {
 			SimpleTrigger trigger = AllTriggers.MIXER_MIX;
 			if (AllTileEntities.MECHANICAL_PRESS.is(this))
 				trigger = AllTriggers.PRESS_COMPACT;
@@ -186,6 +192,8 @@ public abstract class BasinOperatingTileEntity extends KineticTileEntity {
 	}
 
 	protected Optional<BasinTileEntity> getBasin() {
+		if(world == null)
+			return Optional.empty();
 		TileEntity basinTE = world.getTileEntity(pos.down(2));
 		if (!(basinTE instanceof BasinTileEntity))
 			return Optional.empty();

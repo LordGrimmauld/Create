@@ -1,6 +1,7 @@
 package com.simibubi.create.content.contraptions.components.mixer;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -32,7 +33,7 @@ import net.minecraftforge.items.IItemHandler;
 
 public class MechanicalMixerTileEntity extends BasinOperatingTileEntity {
 
-	private static Object shapelessOrMixingRecipesKey = new Object();
+	private static final Object shapelessOrMixingRecipesKey = new Object();
 
 	public int runningTicks;
 	public int processingTicks;
@@ -74,7 +75,7 @@ public class MechanicalMixerTileEntity extends BasinOperatingTileEntity {
 				offset = num - .5f;
 			} else if (runningTicks <= 20) {
 				offset = 1;
-			} else if (runningTicks > 20) {
+			} else {
 				localTick = 40 - runningTicks;
 				float num = (localTick - partialTicks) / 20f;
 				num = ((2 - MathHelper.cos((float) (num * Math.PI))) / 2);
@@ -93,9 +94,7 @@ public class MechanicalMixerTileEntity extends BasinOperatingTileEntity {
 			if (runningTicks <= 20) {
 				return speed * 2;
 			}
-			if (runningTicks > 20) {
-				return speed;
-			}
+			return speed;
 		}
 		return speed / 2;
 	}
@@ -130,7 +129,7 @@ public class MechanicalMixerTileEntity extends BasinOperatingTileEntity {
 		}
 
 		float speed = Math.abs(getSpeed());
-		if (running) {
+		if (running && world != null) {
 			if (world.isRemote && runningTicks == 20)
 				renderParticles();
 
@@ -155,25 +154,23 @@ public class MechanicalMixerTileEntity extends BasinOperatingTileEntity {
 	}
 
 	public void renderParticles() {
-		IItemHandler itemHandler = basinInv.orElse(null);
-		if (itemHandler != null) {
-			BasinInventory inv = (BasinInventory) itemHandler;
+		IItemHandler itemHandler = basinItemInv.orElse(null);
+		BasinInventory inv = (BasinInventory) itemHandler;
 
-			for (int slot = 0; slot < inv.getInputHandler().getSlots(); slot++) {
-				ItemStack stackInSlot = itemHandler.getStackInSlot(slot);
-				if (stackInSlot.isEmpty())
-					continue;
+		for (int slot = 0; slot < inv.getInputHandler().getSlots(); slot++) {
+			ItemStack stackInSlot = itemHandler.getStackInSlot(slot);
+			if (stackInSlot.isEmpty())
+				continue;
 
-				ItemParticleData data = new ItemParticleData(ParticleTypes.ITEM, stackInSlot);
-				float angle = world.rand.nextFloat() * 360;
-				Vec3d offset = new Vec3d(0, 0, 0.25f);
-				offset = VecHelper.rotate(offset, angle, Axis.Y);
-				Vec3d target = VecHelper.rotate(offset, getSpeed() > 0 ? 25 : -25, Axis.Y).add(0, .25f, 0);
+			ItemParticleData data = new ItemParticleData(ParticleTypes.ITEM, stackInSlot);
+			float angle = world.rand.nextFloat() * 360;
+			Vec3d offset = new Vec3d(0, 0, 0.25f);
+			offset = VecHelper.rotate(offset, angle, Axis.Y);
+			Vec3d target = VecHelper.rotate(offset, getSpeed() > 0 ? 25 : -25, Axis.Y).add(0, .25f, 0);
 
-				Vec3d center = offset.add(VecHelper.getCenterOf(pos));
-				target = VecHelper.offsetRandomly(target.subtract(offset), world.rand, 1 / 128f);
-				world.addParticle(data, center.x, center.y - 2, center.z, target.x, target.y, target.z);
-			}
+			Vec3d center = offset.add(VecHelper.getCenterOf(pos));
+			target = VecHelper.offsetRandomly(target.subtract(offset), world.rand, 1 / 128f);
+			world.addParticle(data, center.x, center.y - 2, center.z, target.x, target.y, target.z);
 		}
 	}
 
@@ -196,11 +193,11 @@ public class MechanicalMixerTileEntity extends BasinOperatingTileEntity {
 			return false;
 
 		List<ItemStack> remaining = new ArrayList<>();
-		inputs.forEach(stack -> remaining.add(stack.copy()));
+		inputs.forEachItemStack(stack -> remaining.add(stack.copy()));
 
 		// sort by leniency
 		List<Ingredient> sortedIngredients = new LinkedList<>(ingredients);
-		sortedIngredients.sort((i1, i2) -> i1.getMatchingStacks().length - i2.getMatchingStacks().length);
+		sortedIngredients.sort(Comparator.comparingInt(i -> i.getMatchingStacks().length));
 		Ingredients: for (Ingredient ingredient : sortedIngredients) {
 			for (ItemStack stack : remaining) {
 				if (stack.isEmpty())
