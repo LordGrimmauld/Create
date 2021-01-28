@@ -15,9 +15,11 @@ import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.DistExecutor;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class SplitShaftInstance extends KineticTileInstance<SplitShaftTileEntity> {
     public static void register(TileEntityType<? extends SplitShaftTileEntity> type) {
@@ -25,7 +27,7 @@ public class SplitShaftInstance extends KineticTileInstance<SplitShaftTileEntity
                 InstancedTileRenderRegistry.instance.register(type, SplitShaftInstance::new));
     }
 
-    protected ArrayList<InstanceKey<RotatingData>> keys;
+    protected List<LazyOptional<InstanceKey<RotatingData>>> keys;
 
     public SplitShaftInstance(InstancedTileRenderer modelManager, SplitShaftTileEntity tile) {
         super(modelManager, tile);
@@ -42,12 +44,8 @@ public class SplitShaftInstance extends KineticTileInstance<SplitShaftTileEntity
         float speed = tile.getSpeed();
 
         for (Direction dir : Iterate.directionsInAxis(boxAxis)) {
-
             InstancedModel<RotatingData> half = AllBlockPartials.SHAFT_HALF.renderOnDirectionalSouthRotating(modelManager, state, dir);
-
-            float splitSpeed = speed * tile.getRotationSpeedModifier(dir);
-
-            keys.add(half.setupInstance(setupFunc(splitSpeed, boxAxis)));
+            keys.add(LazyOptional.of(() -> half.setupInstance(setupFunc(speed * tile.getRotationSpeedModifier(dir), boxAxis))));
         }
     }
 
@@ -60,20 +58,21 @@ public class SplitShaftInstance extends KineticTileInstance<SplitShaftTileEntity
         Direction[] directions = Iterate.directionsInAxis(boxAxis);
 
         for (int i : Iterate.zeroAndOne) {
-            updateRotation(keys.get(i), directions[i]);
+            keys.get(i).ifPresent(key -> updateRotation(key, directions[i]));
         }
     }
 
     @Override
     public void updateLight() {
-        for (InstanceKey<RotatingData> key : keys) {
-            key.modifyInstance(this::relight);
+        for (LazyOptional<InstanceKey<RotatingData>> lazykey : keys) {
+            lazykey.ifPresent(key -> key.modifyInstance(this::relight));
         }
     }
 
     @Override
     public void remove() {
-        keys.forEach(InstanceKey::delete);
+        keys.forEach(lazykey -> lazykey.ifPresent(InstanceKey::delete));
+        keys.forEach(LazyOptional::invalidate);
         keys.clear();
     }
 

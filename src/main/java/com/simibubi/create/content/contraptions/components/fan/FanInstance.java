@@ -14,6 +14,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.LightType;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.DistExecutor;
 
 import static net.minecraft.state.properties.BlockStateProperties.FACING;
@@ -24,8 +25,8 @@ public class FanInstance extends KineticTileInstance<EncasedFanTileEntity> {
                 InstancedTileRenderRegistry.instance.register(type, FanInstance::new));
     }
 
-    protected InstanceKey<RotatingData> shaft;
-    protected InstanceKey<RotatingData> fan;
+    protected LazyOptional<InstanceKey<RotatingData>> shaft;
+    protected LazyOptional<InstanceKey<RotatingData>> fan;
 
     public FanInstance(InstancedTileRenderer modelManager, EncasedFanTileEntity tile) {
         super(modelManager, tile);
@@ -37,11 +38,11 @@ public class FanInstance extends KineticTileInstance<EncasedFanTileEntity> {
         final Direction.Axis axis = ((IRotate) lastState.getBlock()).getRotationAxis(lastState);
 
         InstancedModel<RotatingData> shaftHalf =
-                AllBlockPartials.SHAFT_HALF.renderOnDirectionalSouthRotating(modelManager, lastState, direction.getOpposite());
+            AllBlockPartials.SHAFT_HALF.renderOnDirectionalSouthRotating(modelManager, lastState, direction.getOpposite());
         InstancedModel<RotatingData> fanInner =
-                AllBlockPartials.ENCASED_FAN_INNER.renderOnDirectionalSouthRotating(modelManager, lastState, direction.getOpposite());
+            AllBlockPartials.ENCASED_FAN_INNER.renderOnDirectionalSouthRotating(modelManager, lastState, direction.getOpposite());
 
-        shaft = shaftHalf.setupInstance(data -> {
+        shaft = LazyOptional.of(() -> shaftHalf.setupInstance(data -> {
             BlockPos behind = pos.offset(direction.getOpposite());
             int blockLight = world.getLightLevel(LightType.BLOCK, behind);
             int skyLight = world.getLightLevel(LightType.SKY, behind);
@@ -52,8 +53,8 @@ public class FanInstance extends KineticTileInstance<EncasedFanTileEntity> {
                 .setTileEntity(tile)
                 .setBlockLight(blockLight)
                 .setSkyLight(skyLight);
-        });
-        fan = fanInner.setupInstance(data -> {
+        }));
+        fan = LazyOptional.of(() -> fanInner.setupInstance(data -> {
             BlockPos inFront = pos.offset(direction);
             int blockLight = world.getLightLevel(LightType.BLOCK, inFront);
             int skyLight = world.getLightLevel(LightType.SKY, inFront);
@@ -64,7 +65,7 @@ public class FanInstance extends KineticTileInstance<EncasedFanTileEntity> {
                 .setTileEntity(tile)
                 .setBlockLight(blockLight)
                 .setSkyLight(skyLight);
-        });
+        }));
     }
 
     private float getFanSpeed() {
@@ -79,39 +80,40 @@ public class FanInstance extends KineticTileInstance<EncasedFanTileEntity> {
     @Override
     protected void onUpdate() {
         Direction.Axis axis = lastState.get(FACING).getAxis();
-        updateRotation(shaft, axis);
+        shaft.ifPresent(key -> updateRotation(key, axis));
 
-        fan.modifyInstance(data -> {
+        fan.ifPresent(key -> key.modifyInstance(data -> {
             data.setRotationalSpeed(getFanSpeed())
                 .setRotationOffset(getRotationOffset(axis))
                 .setRotationAxis(Direction.getFacingFromAxis(Direction.AxisDirection.POSITIVE, axis).getUnitVector());
-        });
+        }));
     }
 
     @Override
     public void updateLight() {
         final Direction direction = lastState.get(FACING);
 
-        shaft.modifyInstance(data -> {
+        shaft.ifPresent(key -> key.modifyInstance(data -> {
             BlockPos behind = pos.offset(direction.getOpposite());
             int blockLight = world.getLightLevel(LightType.BLOCK, behind);
             int skyLight = world.getLightLevel(LightType.SKY, behind);
             data.setBlockLight(blockLight)
                 .setSkyLight(skyLight);
-        });
-        fan.modifyInstance(data -> {
+        }));
+        fan.ifPresent(key -> key.modifyInstance(data -> {
             BlockPos inFront = pos.offset(direction);
             int blockLight = world.getLightLevel(LightType.BLOCK, inFront);
             int skyLight = world.getLightLevel(LightType.SKY, inFront);
             data.setBlockLight(blockLight)
                 .setSkyLight(skyLight);
-        });
+        }));
     }
 
     @Override
     public void remove() {
-        shaft.delete();
-        fan.delete();
-        shaft = fan = null;
+        shaft.ifPresent(InstanceKey::delete);
+        fan.ifPresent(InstanceKey::delete);
+        shaft.invalidate();
+        fan.invalidate();
     }
 }

@@ -9,6 +9,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.DistExecutor;
 
 import static com.simibubi.create.content.contraptions.base.KineticTileEntityRenderer.KINETIC_TILE;
@@ -19,7 +20,7 @@ public class SingleRotatingInstance extends KineticTileInstance<KineticTileEntit
                 InstancedTileRenderRegistry.instance.register(type, SingleRotatingInstance::new));
     }
 
-    protected InstanceKey<RotatingData> rotatingModelKey;
+    protected LazyOptional<InstanceKey<RotatingData>> rotatingModelKey;
 
     public SingleRotatingInstance(InstancedTileRenderer modelManager, KineticTileEntity tile) {
         super(modelManager, tile);
@@ -27,25 +28,24 @@ public class SingleRotatingInstance extends KineticTileInstance<KineticTileEntit
 
     @Override
     protected void init() {
-        Direction.Axis axis = ((IRotate) lastState.getBlock()).getRotationAxis(lastState);
-        rotatingModelKey = getModel().setupInstance(setupFunc(tile.getSpeed(), axis));
+        rotatingModelKey = LazyOptional.of(() -> getModel().setupInstance(setupFunc(tile.getSpeed(), ((IRotate) lastState.getBlock()).getRotationAxis(lastState))));
     }
 
     @Override
     public void onUpdate() {
         Direction.Axis axis = ((IRotate) lastState.getBlock()).getRotationAxis(lastState);
-        updateRotation(rotatingModelKey, axis);
+        rotatingModelKey.ifPresent(key -> updateRotation(key, axis));
     }
 
     @Override
     public void updateLight() {
-        rotatingModelKey.modifyInstance(this::relight);
+        rotatingModelKey.ifPresent(key -> key.modifyInstance(this::relight));
     }
 
     @Override
     public void remove() {
-        rotatingModelKey.delete();
-        rotatingModelKey = null;
+        rotatingModelKey.ifPresent(InstanceKey::delete);
+        rotatingModelKey.invalidate();
     }
 
     protected BlockState getRenderedBlockState() {

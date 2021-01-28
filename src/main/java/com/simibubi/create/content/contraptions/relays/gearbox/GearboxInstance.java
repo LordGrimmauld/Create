@@ -15,6 +15,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.DistExecutor;
 
 import java.util.EnumMap;
@@ -26,7 +27,7 @@ public class GearboxInstance extends KineticTileInstance<GearboxTileEntity> {
                 InstancedTileRenderRegistry.instance.register(type, GearboxInstance::new));
     }
 
-    protected EnumMap<Direction, InstanceKey<RotatingData>> keys;
+    protected EnumMap<Direction, LazyOptional<InstanceKey<RotatingData>>> keys;
     protected Direction sourceFacing;
 
     public GearboxInstance(InstancedTileRenderer modelManager, GearboxTileEntity tile) {
@@ -53,14 +54,12 @@ public class GearboxInstance extends KineticTileInstance<GearboxTileEntity> {
 
             InstancedModel<RotatingData> shaft = AllBlockPartials.SHAFT_HALF.renderOnDirectionalSouthRotating(modelManager, state, direction);
 
-            InstanceKey<RotatingData> key = shaft.setupInstance(data -> {
-                data.setBlockLight(blockLight)
-                    .setSkyLight(skyLight)
-                    .setRotationalSpeed(getSpeed(direction))
-                    .setRotationOffset(getRotationOffset(axis))
-                    .setRotationAxis(Direction.getFacingFromAxis(Direction.AxisDirection.POSITIVE, axis).getUnitVector())
-                    .setTileEntity(tile);
-            });
+            LazyOptional<InstanceKey<RotatingData>> key = LazyOptional.of(() -> shaft.setupInstance(data -> data.setBlockLight(blockLight)
+                .setSkyLight(skyLight)
+                .setRotationalSpeed(getSpeed(direction))
+                .setRotationOffset(getRotationOffset(axis))
+                .setRotationAxis(Direction.getFacingFromAxis(Direction.AxisDirection.POSITIVE, axis).getUnitVector())
+                .setTileEntity(tile)));
             keys.put(direction, key);
         }
     }
@@ -90,15 +89,15 @@ public class GearboxInstance extends KineticTileInstance<GearboxTileEntity> {
     public void onUpdate() {
         updateSourceFacing();
         BlockPos pos = tile.getPos();
-        for (Map.Entry<Direction, InstanceKey<RotatingData>> key : keys.entrySet()) {
-            key.getValue().modifyInstance(data -> {
-                Direction direction = key.getKey();
+        for (Map.Entry<Direction, LazyOptional<InstanceKey<RotatingData>>> lazykey : keys.entrySet()) {
+            lazykey.getValue().ifPresent(key -> key.modifyInstance(data -> {
+                Direction direction = lazykey.getKey();
                 Direction.Axis axis = direction.getAxis();
 
                 data.setRotationalSpeed(getSpeed(direction))
                     .setRotationOffset(getRotationOffset(axis))
                     .setRotationAxis(Direction.getFacingFromAxis(Direction.AxisDirection.POSITIVE, axis).getUnitVector());
-            });
+            }));
         }
     }
 
@@ -108,17 +107,15 @@ public class GearboxInstance extends KineticTileInstance<GearboxTileEntity> {
         int blockLight = tile.getWorld().getLightLevel(LightType.BLOCK, pos);
         int skyLight = tile.getWorld().getLightLevel(LightType.SKY, pos);
 
-        for (InstanceKey<RotatingData> key : keys.values()) {
-            key.modifyInstance(data -> data.setBlockLight(blockLight).setSkyLight(skyLight));
+        for (LazyOptional<InstanceKey<RotatingData>> lazykey : keys.values()) {
+            lazykey.ifPresent(key -> key.modifyInstance(data -> data.setBlockLight(blockLight).setSkyLight(skyLight)));
         }
     }
 
     @Override
     public void remove() {
-        for (InstanceKey<RotatingData> key : keys.values()) {
-            key.delete();
-        }
-
+        keys.values().forEach(lazykey -> lazykey.ifPresent(InstanceKey::delete));
+        keys.values().forEach(LazyOptional::invalidate);
         keys.clear();
     }
 }

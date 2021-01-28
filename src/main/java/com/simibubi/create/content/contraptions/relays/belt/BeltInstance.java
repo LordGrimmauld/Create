@@ -15,6 +15,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.DistExecutor;
 
 import java.util.ArrayList;
@@ -35,8 +36,8 @@ public class BeltInstance extends KineticTileInstance<BeltTileEntity> {
     private boolean alongZ;
     private BeltSlope beltSlope;
     private Direction facing;
-    protected ArrayList<InstanceKey<BeltData>> keys;
-    protected InstanceKey<RotatingData> pulleyKey;
+    protected ArrayList<LazyOptional<InstanceKey<BeltData>>> keys;
+    protected LazyOptional<InstanceKey<RotatingData>> pulleyKey;
 
     public BeltInstance(InstancedTileRenderer modelManager, BeltTileEntity tile) {
         super(modelManager, tile);
@@ -67,47 +68,42 @@ public class BeltInstance extends KineticTileInstance<BeltTileEntity> {
             AllBlockPartials beltPartial = BeltRenderer.getBeltPartial(diagonal, start, end, bottom);
             SpriteShiftEntry spriteShift = BeltRenderer.getSpriteShiftEntry(diagonal, bottom);
 
-            InstancedModel<BeltData> beltModel = beltPartial.renderOnBelt(modelManager, blockState);
-            Consumer<BeltData> setupFunc = setupFunc(spriteShift);
-
-            keys.add(beltModel.setupInstance(setupFunc));
+            keys.add(LazyOptional.of(() -> beltPartial.renderOnBelt(modelManager, blockState).setupInstance(setupFunc(spriteShift))));
 
             if (diagonal) break;
         }
 
         if (tile.hasPulley()) {
-            InstancedModel<RotatingData> pulleyModel = getPulleyModel(blockState);
-
-            pulleyKey = pulleyModel.setupInstance(setupFunc(tile.getSpeed(), getRotationAxis()));
+            pulleyKey = LazyOptional.of(() -> getPulleyModel(blockState).setupInstance(setupFunc(tile.getSpeed(), getRotationAxis())));
+        } else {
+            pulleyKey = LazyOptional.empty();
         }
     }
 
     @Override
     public void onUpdate() {
-        for (InstanceKey<BeltData> key : keys) {
-            key.modifyInstance(data -> data.setRotationalSpeed(getScrollSpeed()));
+        for (LazyOptional<InstanceKey<BeltData>> lazykey : keys) {
+            lazykey.ifPresent(key -> key.modifyInstance(data -> data.setRotationalSpeed(getScrollSpeed())));
         }
 
-        if (pulleyKey != null) {
-            updateRotation(pulleyKey, getRotationAxis());
-        }
+        pulleyKey.ifPresent(key -> updateRotation(key, getRotationAxis()));
     }
 
     @Override
     public void updateLight() {
-        for (InstanceKey<BeltData> key : keys) {
-            key.modifyInstance(this::relight);
+        for (LazyOptional<InstanceKey<BeltData>> lazykey : keys) {
+            lazykey.ifPresent(key -> key.modifyInstance(this::relight));
         }
 
-        if (pulleyKey != null) pulleyKey.modifyInstance(this::relight);
+        pulleyKey.ifPresent(key -> key.modifyInstance(this::relight));
     }
 
     @Override
     public void remove() {
-        keys.forEach(InstanceKey::delete);
+        keys.forEach(lazykey -> lazykey.ifPresent(InstanceKey::delete));
+        keys.forEach(LazyOptional::invalidate);
         keys.clear();
-        if (pulleyKey != null) pulleyKey.delete();
-        pulleyKey = null;
+        pulleyKey.ifPresent(InstanceKey::delete);
     }
 
     private float getScrollSpeed() {
