@@ -61,7 +61,7 @@ public class Backend {
 	}
 
 	public static boolean isFlywheelWorld(World world) {
-		return world == Minecraft.getInstance().world || (world instanceof IFlywheelWorld && ((IFlywheelWorld) world).supportsFlywheel());
+		return world == Minecraft.getInstance().level || (world instanceof IFlywheelWorld && ((IFlywheelWorld) world).supportsFlywheel());
 	}
 
 	public static boolean available() {
@@ -93,7 +93,7 @@ public class Backend {
 
 		if (manager instanceof IReloadableResourceManager) {
 			ISelectiveResourceReloadListener listener = shaderLoader::onResourceManagerReload;
-			((IReloadableResourceManager) manager).addReloadListener(listener);
+			((IReloadableResourceManager) manager).registerReloadListener(listener);
 		}
 	}
 

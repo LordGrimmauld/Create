@@ -75,7 +75,7 @@ public class KineticRenderer extends InstancedTileRenderer<BasicProgram> {
 		camY -= originCoordinate.getY();
 		camZ -= originCoordinate.getZ();
 
-		Matrix4f translate = Matrix4f.translate((float) -camX, (float) -camY, (float) -camZ);
+		Matrix4f translate = Matrix4f.createTranslateMatrix((float) -camX, (float) -camY, (float) -camZ);
 
 		translate.multiplyBackward(viewProjection);
 

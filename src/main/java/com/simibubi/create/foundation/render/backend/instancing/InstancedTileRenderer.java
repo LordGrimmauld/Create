@@ -76,10 +76,10 @@ public abstract class InstancedTileRenderer<P extends BasicProgram> {
 		frame++;
 		processQueuedAdditions();
 
-		Vector3f look = info.getHorizontalPlane();
-		float lookX = look.getX();
-		float lookY = look.getY();
-		float lookZ = look.getZ();
+		Vector3f look = info.getLookVector();
+		float lookX = look.x();
+		float lookY = look.y();
+		float lookZ = look.z();
 
 		// integer camera pos
 		int cX = (int) cameraX;
@@ -264,16 +264,16 @@ public abstract class InstancedTileRenderer<P extends BasicProgram> {
 	public boolean canCreateInstance(TileEntity tile) {
 		if (tile.isRemoved()) return false;
 
-		World world = tile.getWorld();
+		World world = tile.getLevel();
 
 		if (world == null) return false;
 
-		if (world.isAirBlock(tile.getPos())) return false;
+		if (world.isEmptyBlock(tile.getBlockPos())) return false;
 
-		if (world == Minecraft.getInstance().world) {
-			BlockPos pos = tile.getPos();
+		if (world == Minecraft.getInstance().level) {
+			BlockPos pos = tile.getBlockPos();
 
-			IBlockReader existingChunk = world.getExistingChunk(pos.getX() >> 4, pos.getZ() >> 4);
+			IBlockReader existingChunk = world.getChunkForCollisions(pos.getX() >> 4, pos.getZ() >> 4);
 
 			return existingChunk != null;
 		}

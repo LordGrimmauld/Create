@@ -20,16 +20,16 @@ public class FastRenderDispatcher {
 	public static WorldAttached<ConcurrentHashMap.KeySetView<TileEntity, Boolean>> queuedUpdates = new WorldAttached<>(ConcurrentHashMap::newKeySet);
 
 	public static void enqueueUpdate(TileEntity te) {
-		queuedUpdates.get(te.getWorld()).add(te);
+		queuedUpdates.get(te.getLevel()).add(te);
 	}
 
 	public static void tick() {
 		Minecraft mc = Minecraft.getInstance();
-		ClientWorld world = mc.world;
+		ClientWorld world = mc.level;
 
 		KineticRenderer kineticRenderer = CreateClient.KINETIC_RENDERER.get(world);
 
-		Entity renderViewEntity = mc.renderViewEntity != null ? mc.renderViewEntity : mc.player;
+		Entity renderViewEntity = mc.cameraEntity != null ? mc.cameraEntity : mc.player;
 		kineticRenderer.tick(renderViewEntity.getX(), renderViewEntity.getY(), renderViewEntity.getZ());
 
 		ConcurrentHashMap.KeySetView<TileEntity, Boolean> map = queuedUpdates.get(world);
@@ -54,19 +54,19 @@ public class FastRenderDispatcher {
 	}
 
 	public static void refresh() {
-		RenderWork.enqueue(Minecraft.getInstance().worldRenderer::loadRenderers);
+		RenderWork.enqueue(Minecraft.getInstance().levelRenderer::allChanged);
 	}
 
 	public static void renderLayer(RenderType layer, Matrix4f viewProjection, double cameraX, double cameraY, double cameraZ) {
 		if (!Backend.canUseInstancing()) return;
 
-		ClientWorld world = Minecraft.getInstance().world;
+		ClientWorld world = Minecraft.getInstance().level;
 		KineticRenderer kineticRenderer = CreateClient.KINETIC_RENDERER.get(world);
 
-		layer.startDrawing();
+		layer.setupRenderState();
 
 		kineticRenderer.render(layer, viewProjection, cameraX, cameraY, cameraZ);
 
-		layer.endDrawing();
+		layer.clearRenderState();
 	}
 }

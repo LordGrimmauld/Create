@@ -76,7 +76,7 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 
 	protected void updateConnectivity() {
 		updateConnectivity = false;
-		if (world.isRemote)
+		if (level.isClientSide)
 			return;
 		if (!isController())
 			return;
@@ -93,8 +93,8 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 		}
 
 		if (lastKnownPos == null)
-			lastKnownPos = getPos();
-		else if (!lastKnownPos.equals(pos) && pos != null) {
+			lastKnownPos = getBlockPos();
+		else if (!lastKnownPos.equals(worldPosition) && worldPosition != null) {
 			onPositionChanged();
 			return;
 		}
@@ -107,7 +107,7 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 
 	public boolean isController() {
 		return controller == null
-			|| pos.getX() == controller.getX() && pos.getY() == controller.getY() && pos.getZ() == controller.getZ();
+			|| worldPosition.getX() == controller.getX() && worldPosition.getY() == controller.getY() && worldPosition.getZ() == controller.getZ();
 	}
 
 	@Override
@@ -118,11 +118,11 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 
 	private void onPositionChanged() {
 		removeController(true);
-		lastKnownPos = pos;
+		lastKnownPos = worldPosition;
 	}
 
 	protected void onFluidStackChanged(FluidStack newFluidStack) {
-		if (!hasWorld())
+		if (!hasLevel())
 			return;
 
 		FluidAttributes attributes = newFluidStack.getFluid()
@@ -137,11 +137,11 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 
 			for (int xOffset = 0; xOffset < width; xOffset++) {
 				for (int zOffset = 0; zOffset < width; zOffset++) {
-					BlockPos pos = this.pos.add(xOffset, yOffset, zOffset);
-					FluidTankTileEntity tankAt = FluidTankConnectivityHandler.anyTankAt(world, pos);
+					BlockPos pos = this.worldPosition.offset(xOffset, yOffset, zOffset);
+					FluidTankTileEntity tankAt = FluidTankConnectivityHandler.anyTankAt(level, pos);
 					if (tankAt == null)
 						continue;
-					world.updateComparatorOutputLevel(pos, tankAt.getBlockState()
+					level.updateNeighbourForOutputSignal(pos, tankAt.getBlockState()
 						.getBlock());
 					if (tankAt.luminosity == actualLuminosity)
 						continue;
@@ -150,14 +150,14 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 			}
 		}
 
-		if (!world.isRemote) {
-			markDirty();
+		if (!level.isClientSide) {
+			setChanged();
 			sendData();
 		}
 	}
 
 	protected void setLuminosity(int luminosity) {
-		if (world.isRemote)
+		if (level.isClientSide)
 			return;
 		if (this.luminosity == luminosity)
 			return;
@@ -168,7 +168,7 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 	public FluidTankTileEntity getControllerTE() {
 		if (isController())
 			return this;
-		TileEntity tileEntity = world.getTileEntity(controller);
+		TileEntity tileEntity = level.getBlockEntity(controller);
 		if (tileEntity instanceof FluidTankTileEntity)
 			return (FluidTankTileEntity) tileEntity;
 		return null;
@@ -183,7 +183,7 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 	}
 
 	public void removeController(boolean keepFluids) {
-		if (world.isRemote)
+		if (level.isClientSide)
 			return;
 		updateConnectivity = true;
 		if (!keepFluids)
@@ -195,14 +195,14 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 
 		BlockState state = getBlockState();
 		if (FluidTankBlock.isTank(state)) {
-			state = state.with(FluidTankBlock.BOTTOM, true);
-			state = state.with(FluidTankBlock.TOP, true);
-			state = state.with(FluidTankBlock.SHAPE, window ? Shape.WINDOW : Shape.PLAIN);
-			getWorld().setBlockState(pos, state, 22);
+			state = state.setValue(FluidTankBlock.BOTTOM, true);
+			state = state.setValue(FluidTankBlock.TOP, true);
+			state = state.setValue(FluidTankBlock.SHAPE, window ? Shape.WINDOW : Shape.PLAIN);
+			getLevel().setBlock(worldPosition, state, 22);
 		}
 
 		refreshCapability();
-		markDirty();
+		setChanged();
 		sendData();
 	}
 
@@ -236,8 +236,8 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 			for (int xOffset = 0; xOffset < width; xOffset++) {
 				for (int zOffset = 0; zOffset < width; zOffset++) {
 
-					BlockPos pos = this.pos.add(xOffset, yOffset, zOffset);
-					BlockState blockState = world.getBlockState(pos);
+					BlockPos pos = this.worldPosition.offset(xOffset, yOffset, zOffset);
+					BlockState blockState = level.getBlockState(pos);
 					if (!FluidTankBlock.isTank(blockState))
 						continue;
 
@@ -255,9 +255,9 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 							shape = Shape.WINDOW;
 					}
 
-					world.setBlockState(pos, blockState.with(FluidTankBlock.SHAPE, shape), 22);
-					world.getChunkProvider()
-						.getLightManager()
+					level.setBlock(pos, blockState.setValue(FluidTankBlock.SHAPE, shape), 22);
+					level.getChunkSource()
+						.getLightEngine()
 						.checkBlock(pos);
 				}
 			}
@@ -265,13 +265,13 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 	}
 
 	public void setController(BlockPos controller) {
-		if (world.isRemote)
+		if (level.isClientSide)
 			return;
 		if (controller.equals(this.controller))
 			return;
 		this.controller = controller;
 		refreshCapability();
-		markDirty();
+		setChanged();
 		sendData();
 	}
 
@@ -283,7 +283,7 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 	}
 
 	public BlockPos getController() {
-		return isController() ? pos : controller;
+		return isController() ? worldPosition : controller;
 	}
 
 	private AxisAlignedBB cachedBoundingBox;
@@ -293,7 +293,7 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 	public AxisAlignedBB getRenderBoundingBox() {
 		if (cachedBoundingBox == null) {
 			if (isController())
-				cachedBoundingBox = super.getRenderBoundingBox().expand(width - 1, height - 1, width - 1);
+				cachedBoundingBox = super.getRenderBoundingBox().expandTowards(width - 1, height - 1, width - 1);
 			else
 				cachedBoundingBox = super.getRenderBoundingBox();
 		}
@@ -302,14 +302,14 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 
 	@Override
 	@OnlyIn(Dist.CLIENT)
-	public double getMaxRenderDistanceSquared() {
+	public double getViewDistance() {
 		int dist = 64 + getMaxHeight() * 2;
 		return dist * dist;
 	}
 
 	@Nullable
 	public FluidTankTileEntity getOtherFluidTankTileEntity(Direction direction) {
-		TileEntity otherTE = world.getTileEntity(pos.offset(direction));
+		TileEntity otherTE = level.getBlockEntity(worldPosition.relative(direction));
 		if (otherTE instanceof FluidTankTileEntity)
 			return (FluidTankTileEntity) otherTE;
 		return null;
@@ -363,8 +363,8 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 		boolean changeOfController =
 			controllerBefore == null ? controller != null : !controllerBefore.equals(controller);
 		if (changeOfController || prevSize != width || prevHeight != height) {
-			if (hasWorld())
-				world.notifyBlockUpdate(getPos(), getBlockState(), getBlockState(), 16);
+			if (hasLevel())
+				level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 16);
 			if (isController())
 				tankInventory.setCapacity(getCapacityMultiplier() * getTotalTankSize());
 		}
@@ -374,10 +374,10 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 				fluidLevel = new InterpolatedChasingValue().start(fillState);
 			fluidLevel.target(fillState);
 		}
-		if (luminosity != prevLum && hasWorld())
-			world.getChunkProvider()
-				.getLightManager()
-				.checkBlock(pos);
+		if (luminosity != prevLum && hasLevel())
+			level.getChunkSource()
+				.getLightEngine()
+				.checkBlock(worldPosition);
 
 		if (compound.contains("LazySync"))
 			fluidLevel.withSpeed(compound.contains("LazySync") ? 1 / 8f : 1 / 2f);
@@ -424,8 +424,8 @@ public class FluidTankTileEntity extends SmartTileEntity implements IHaveGoggleI
 	}
 
 	@Override
-	public void remove() {
-		super.remove();
+	public void setRemoved() {
+		super.setRemoved();
 	}
 
 	@Override

@@ -23,11 +23,11 @@ public class SchematicPlacePacket extends SimplePacketBase {
 	}
 
 	public SchematicPlacePacket(PacketBuffer buffer) {
-		stack = buffer.readItemStack();
+		stack = buffer.readItem();
 	}
 
 	public void write(PacketBuffer buffer) {
-		buffer.writeItemStack(stack);
+		buffer.writeItem(stack);
 	}
 
 	public void handle(Supplier<Context> context) {
@@ -37,11 +37,11 @@ public class SchematicPlacePacket extends SimplePacketBase {
 				return;
 			Template t = SchematicItem.loadSchematic(stack);
 			PlacementSettings settings = SchematicItem.getSettings(stack);
-			if (player.canUseCommandBlock())
-				settings.func_215220_b(SchematicProcessor.INSTANCE); // remove processor
+			if (player.canUseGameMasterBlocks())
+				settings.popProcessor(SchematicProcessor.INSTANCE); // remove processor
 			settings.setIgnoreEntities(false);
-			t.place(player.getServerWorld(), NBTUtil.readBlockPos(stack.getTag().getCompound("Anchor")),
-					settings, player.getRNG());
+			t.placeInWorldChunk(player.getLevel(), NBTUtil.readBlockPos(stack.getTag().getCompound("Anchor")),
+					settings, player.getRandom());
 		});
 		context.get().setPacketHandled(true);
 	}

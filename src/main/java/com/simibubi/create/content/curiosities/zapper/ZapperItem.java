@@ -45,25 +45,27 @@ import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.PacketDistributor;
 
+import net.minecraft.item.Item.Properties;
+
 public abstract class ZapperItem extends Item {
 
 	public ZapperItem(Properties properties) {
-		super(properties.maxStackSize(1));
+		super(properties.stacksTo(1));
 	}
 
 	@Override
 	@OnlyIn(Dist.CLIENT)
-	public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+	public void appendHoverText(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
 		if (stack.hasTag() && stack.getTag()
 			.contains("BlockUsed")) {
 			String usedblock = NBTUtil.readBlockState(stack.getTag()
 				.getCompound("BlockUsed"))
 				.getBlock()
-				.getTranslationKey();
+				.getDescriptionId();
 			ItemDescription.add(tooltip,
 				Lang.translate("terrainzapper.usingBlock",
-					new TranslationTextComponent(usedblock).formatted(TextFormatting.GRAY))
-					.formatted(TextFormatting.DARK_GRAY));
+					new TranslationTextComponent(usedblock).withStyle(TextFormatting.GRAY))
+					.withStyle(TextFormatting.DARK_GRAY));
 		}
 	}
 
@@ -87,29 +89,29 @@ public abstract class ZapperItem extends Item {
 
 	@Nonnull
 	@Override
-	public ActionResultType onItemUse(ItemUseContext context) {
+	public ActionResultType useOn(ItemUseContext context) {
 		// Shift -> open GUI
 		if (context.getPlayer() != null && context.getPlayer()
-			.isSneaking()) {
-			if (context.getWorld().isRemote) {
+			.isShiftKeyDown()) {
+			if (context.getLevel().isClientSide) {
 				DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-					openHandgunGUI(context.getItem(), context.getHand() == Hand.OFF_HAND);
+					openHandgunGUI(context.getItemInHand(), context.getHand() == Hand.OFF_HAND);
 				});
-				applyCooldown(context.getPlayer(), context.getItem(), false);
+				applyCooldown(context.getPlayer(), context.getItemInHand(), false);
 			}
 			return ActionResultType.SUCCESS;
 		}
-		return super.onItemUse(context);
+		return super.useOn(context);
 	}
 
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World world, PlayerEntity player, Hand hand) {
-		ItemStack item = player.getHeldItem(hand);
+	public ActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
+		ItemStack item = player.getItemInHand(hand);
 		CompoundNBT nbt = item.getOrCreateTag();
 
 		// Shift -> Open GUI
-		if (player.isSneaking()) {
-			if (world.isRemote) {
+		if (player.isShiftKeyDown()) {
+			if (world.isClientSide) {
 				DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
 					openHandgunGUI(item, hand == Hand.OFF_HAND);
 				});
@@ -121,7 +123,7 @@ public abstract class ZapperItem extends Item {
 		boolean mainHand = hand == Hand.MAIN_HAND;
 		boolean isSwap = item.getTag()
 			.contains("_Swap");
-		boolean gunInOtherHand = isZapper(player.getHeldItem(mainHand ? Hand.OFF_HAND : Hand.MAIN_HAND));
+		boolean gunInOtherHand = isZapper(player.getItemInHand(mainHand ? Hand.OFF_HAND : Hand.MAIN_HAND));
 
 		// Pass To Offhand
 		if (mainHand && isSwap && gunInOtherHand)
@@ -133,20 +135,20 @@ public abstract class ZapperItem extends Item {
 			item.getTag()
 				.remove("_Swap");
 		if (!mainHand && gunInOtherHand)
-			player.getHeldItem(Hand.MAIN_HAND)
+			player.getItemInHand(Hand.MAIN_HAND)
 				.getTag()
 				.remove("_Swap");
-		player.setActiveHand(hand);
+		player.startUsingItem(hand);
 
 		// Check if can be used
 		ITextComponent msg = validateUsage(item);
 		if (msg != null) {
-			AllSoundEvents.DENY.play(world, player, player.getBlockPos());
-			player.sendStatusMessage(msg.copy().formatted(TextFormatting.RED), true);
+			AllSoundEvents.DENY.play(world, player, player.blockPosition());
+			player.displayClientMessage(msg.plainCopy().withStyle(TextFormatting.RED), true);
 			return new ActionResult<>(ActionResultType.FAIL, item);
 		}
 
-		BlockState stateToUse = Blocks.AIR.getDefaultState();
+		BlockState stateToUse = Blocks.AIR.defaultBlockState();
 		if (nbt.contains("BlockUsed"))
 			stateToUse = NBTUtil.readBlockState(nbt.getCompound("BlockUsed"));
 		stateToUse = BlockHelper.setZeroAge(stateToUse);
@@ -156,13 +158,13 @@ public abstract class ZapperItem extends Item {
 		}
 
 		// Raytrace - Find the target
-		Vector3d start = player.getPositionVec()
+		Vector3d start = player.position()
 			.add(0, player.getEyeHeight(), 0);
-		Vector3d range = player.getLookVec()
+		Vector3d range = player.getLookAngle()
 			.scale(getZappingRange(item));
 		BlockRayTraceResult raytrace = world
-			.rayTraceBlocks(new RayTraceContext(start, start.add(range), BlockMode.OUTLINE, FluidMode.NONE, player));
-		BlockPos pos = raytrace.getPos();
+			.clip(new RayTraceContext(start, start.add(range), BlockMode.OUTLINE, FluidMode.NONE, player));
+		BlockPos pos = raytrace.getBlockPos();
 		BlockState stateReplaced = world.getBlockState(pos);
 
 		// No target
@@ -172,15 +174,15 @@ public abstract class ZapperItem extends Item {
 		}
 
 		// Find exact position of gun barrel for VFX
-		float yaw = (float) ((player.rotationYaw) / -180 * Math.PI);
-		float pitch = (float) ((player.rotationPitch) / -180 * Math.PI);
+		float yaw = (float) ((player.yRot) / -180 * Math.PI);
+		float pitch = (float) ((player.xRot) / -180 * Math.PI);
 		Vector3d barrelPosNoTransform =
-			new Vector3d(mainHand == (player.getPrimaryHand() == HandSide.RIGHT) ? -.35f : .35f, -0.1f, 1);
-		Vector3d barrelPos = start.add(barrelPosNoTransform.rotatePitch(pitch)
-			.rotateYaw(yaw));
+			new Vector3d(mainHand == (player.getMainArm() == HandSide.RIGHT) ? -.35f : .35f, -0.1f, 1);
+		Vector3d barrelPos = start.add(barrelPosNoTransform.xRot(pitch)
+			.yRot(yaw));
 
 		// Client side
-		if (world.isRemote) {
+		if (world.isClientSide) {
 			ZapperRenderHandler.dontAnimateItem(hand);
 			return new ActionResult<>(ActionResultType.SUCCESS, item);
 		}
@@ -189,9 +191,9 @@ public abstract class ZapperItem extends Item {
 		if (activate(world, player, item, stateToUse, raytrace, data)) {
 			applyCooldown(player, item, gunInOtherHand);
 			AllPackets.channel.send(PacketDistributor.TRACKING_ENTITY.with(() -> player),
-				new ZapperBeamPacket(barrelPos, raytrace.getHitVec(), hand, false));
+				new ZapperBeamPacket(barrelPos, raytrace.getLocation(), hand, false));
 			AllPackets.channel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player),
-				new ZapperBeamPacket(barrelPos, raytrace.getHitVec(), hand, true));
+				new ZapperBeamPacket(barrelPos, raytrace.getLocation(), hand, true));
 		}
 
 		return new ActionResult<>(ActionResultType.SUCCESS, item);
@@ -220,8 +222,8 @@ public abstract class ZapperItem extends Item {
 
 	protected void applyCooldown(PlayerEntity playerIn, ItemStack item, boolean dual) {
 		int delay = getCooldownDelay(item);
-		playerIn.getCooldownTracker()
-			.setCooldown(item.getItem(), dual ? delay * 2 / 3 : delay);
+		playerIn.getCooldowns()
+			.addCooldown(item.getItem(), dual ? delay * 2 / 3 : delay);
 	}
 
 	@Override
@@ -230,18 +232,18 @@ public abstract class ZapperItem extends Item {
 	}
 
 	@Override
-	public boolean canPlayerBreakBlockWhileHolding(BlockState state, World worldIn, BlockPos pos, PlayerEntity player) {
+	public boolean canAttackBlock(BlockState state, World worldIn, BlockPos pos, PlayerEntity player) {
 		return false;
 	}
 
 	@Override
-	public UseAction getUseAction(ItemStack stack) {
+	public UseAction getUseAnimation(ItemStack stack) {
 		return UseAction.NONE;
 	}
 
 	public static void setTileData(World world, BlockPos pos, BlockState state, CompoundNBT data, PlayerEntity player) {
 		if (data != null && AllBlockTags.SAFE_NBT.matches(state)) {
-			TileEntity tile = world.getTileEntity(pos);
+			TileEntity tile = world.getBlockEntity(pos);
 			if (tile != null) {
 				data = NBTProcessors.process(tile, data, !player.isCreative());
 				if (data == null)
@@ -249,7 +251,7 @@ public abstract class ZapperItem extends Item {
 				data.putInt("x", pos.getX());
 				data.putInt("y", pos.getY());
 				data.putInt("z", pos.getZ());
-				tile.fromTag(state, data);
+				tile.load(state, data);
 			}
 		}
 	}

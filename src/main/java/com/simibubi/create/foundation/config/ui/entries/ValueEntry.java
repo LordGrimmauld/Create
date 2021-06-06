@@ -25,7 +25,7 @@ import net.minecraftforge.common.ForgeConfigSpec;
 
 public class ValueEntry<T> extends ConfigScreenList.LabeledEntry {
 
-	protected static final IFormattableTextComponent modComponent = new StringTextComponent("* ").formatted(TextFormatting.BOLD, TextFormatting.DARK_BLUE).append(StringTextComponent.EMPTY.copy().formatted(TextFormatting.RESET));
+	protected static final IFormattableTextComponent modComponent = new StringTextComponent("* ").withStyle(TextFormatting.BOLD, TextFormatting.DARK_BLUE).append(StringTextComponent.EMPTY.plainCopy().withStyle(TextFormatting.RESET));
 	protected static final int resetWidth = 28;//including 6px offset on either side
 	public static final Pattern unitPattern = Pattern.compile("\\[(in .*)]");
 
@@ -52,7 +52,7 @@ public class ValueEntry<T> extends ConfigScreenList.LabeledEntry {
 		listeners.add(resetButton);
 
 		List<String> path = value.getPath();
-		labelTooltip.add(new StringTextComponent(path.get(path.size()-1)).formatted(TextFormatting.GRAY));
+		labelTooltip.add(new StringTextComponent(path.get(path.size()-1)).withStyle(TextFormatting.GRAY));
 		String comment = spec.getComment();
 		if (comment == null || comment.isEmpty())
 			return;
@@ -97,7 +97,7 @@ public class ValueEntry<T> extends ConfigScreenList.LabeledEntry {
 	public void render(MatrixStack ms, int index, int y, int x, int width, int height, int mouseX, int mouseY, boolean p_230432_9_, float partialTicks) {
 		if (isCurrentValueChanged()) {
 			IFormattableTextComponent original = label.getComponent();
-			IFormattableTextComponent changed = modComponent.copy().append(original);
+			IFormattableTextComponent changed = modComponent.plainCopy().append(original);
 			label.withText(changed);
 			super.render(ms, index, y, x, width, height, mouseX, mouseY, p_230432_9_, partialTicks);
 			label.withText(original);

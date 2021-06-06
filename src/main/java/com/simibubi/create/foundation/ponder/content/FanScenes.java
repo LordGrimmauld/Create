@@ -59,7 +59,7 @@ public class FanScenes {
 
 		BlockPos leverPos = util.grid.at(3, 2, 4);
 		Selection reverse = util.select.fromTo(3, 1, 5, 1, 1, 4);
-		scene.world.toggleRedstonePower(util.select.fromTo(leverPos, leverPos.down()));
+		scene.world.toggleRedstonePower(util.select.fromTo(leverPos, leverPos.below()));
 		scene.effects.indicateRedstone(leverPos);
 		scene.world.modifyKineticSpeed(reverse, f -> -f);
 		scene.effects.rotationDirectionIndicator(fanPos.south());
@@ -74,7 +74,7 @@ public class FanScenes {
 		scene.markAsFinished();
 		scene.idle(70);
 
-		scene.world.toggleRedstonePower(util.select.fromTo(leverPos, leverPos.down()));
+		scene.world.toggleRedstonePower(util.select.fromTo(leverPos, leverPos.below()));
 		scene.effects.indicateRedstone(leverPos);
 		scene.world.modifyKineticSpeed(reverse, f -> -f);
 		scene.world.modifyKineticSpeed(util.select.everywhere(), f -> 4 * f);
@@ -101,7 +101,7 @@ public class FanScenes {
 		ElementLink<WorldSectionElement> blockInFront =
 			scene.world.showIndependentSection(util.select.position(3, 1, 0), Direction.SOUTH);
 		scene.world.moveSection(blockInFront, util.vector.of(1, 0, 2), 0);
-		scene.world.setBlock(blockPos, Blocks.LAVA.getDefaultState(), false);
+		scene.world.setBlock(blockPos, Blocks.LAVA.defaultBlockState(), false);
 		scene.idle(10);
 
 		scene.overlay.showSelectionWithText(util.select.fromTo(blockPos, blockPos.west(2)), 80)
@@ -113,9 +113,9 @@ public class FanScenes {
 		ItemStack smelted = new ItemStack(Items.GOLD_INGOT);
 
 		ElementLink<EntityElement> entityLink = scene.world.createItemEntity(util.vector.centerOf(blockPos.west(2)
-			.up(2)), util.vector.of(0, 0.1, 0), stack);
+			.above(2)), util.vector.of(0, 0.1, 0), stack);
 		scene.idle(15);
-		scene.world.modifyEntity(entityLink, e -> e.setMotion(-0.2f, 0, 0));
+		scene.world.modifyEntity(entityLink, e -> e.setDeltaMovement(-0.2f, 0, 0));
 		Vector3d itemVec = util.vector.blockSurface(util.grid.at(1, 1, 2), Direction.EAST)
 			.add(0.1, 0, 0);
 		scene.overlay.showControls(new InputWindowElement(itemVec, Pointing.DOWN).withItem(stack), 20);
@@ -146,7 +146,7 @@ public class FanScenes {
 
 		// smoking start
 
-		BlockState campfire = Blocks.FIRE.getDefaultState();
+		BlockState campfire = Blocks.FIRE.defaultBlockState();
 		scene.world.hideIndependentSection(blockInFront, Direction.NORTH);
 		scene.idle(15);
 		scene.world.setBlock(util.grid.at(3, 1, 0), campfire, false);
@@ -162,7 +162,7 @@ public class FanScenes {
 
 		// washing start
 
-		BlockState water = Blocks.WATER.getDefaultState();
+		BlockState water = Blocks.WATER.defaultBlockState();
 		scene.world.hideIndependentSection(blockInFront, Direction.NORTH);
 		scene.idle(15);
 		scene.world.setBlock(util.grid.at(3, 1, 0), water, false);
@@ -180,9 +180,9 @@ public class FanScenes {
 		ItemStack washed = new ItemStack(Items.GOLD_NUGGET, 16);
 
 		entityLink = scene.world.createItemEntity(util.vector.centerOf(blockPos.west(2)
-			.up(2)), util.vector.of(0, 0.1, 0), stack);
+			.above(2)), util.vector.of(0, 0.1, 0), stack);
 		scene.idle(15);
-		scene.world.modifyEntity(entityLink, e -> e.setMotion(-0.2f, 0, 0));
+		scene.world.modifyEntity(entityLink, e -> e.setDeltaMovement(-0.2f, 0, 0));
 		scene.overlay.showControls(new InputWindowElement(itemVec, Pointing.DOWN).withItem(stack), 20);
 		scene.idle(20);
 		scene.effects.emitParticles(itemVec.add(0, 0.2f, 0), Emitter.simple(ParticleTypes.SPIT, Vector3d.ZERO), 1, 60);
@@ -215,8 +215,8 @@ public class FanScenes {
 		scene.world.moveSection(blockInFront, util.vector.of(0, 1, 0), 15);
 		scene.world.destroyBlock(blockPos.east());
 		scene.world.showSection(util.select.position(blockPos.east()
-			.up()), Direction.DOWN);
-		scene.world.setBlock(blockPos.up(), Blocks.WATER.getDefaultState(), false);
+			.above()), Direction.DOWN);
+		scene.world.setBlock(blockPos.above(), Blocks.WATER.defaultBlockState(), false);
 
 		ItemStack sand = new ItemStack(Items.SAND);
 		ItemStack clay = new ItemStack(Items.CLAY_BALL);
@@ -282,8 +282,8 @@ public class FanScenes {
 			scene.idle(10);
 			scene.world.toggleRedstonePower(util.select.position(pos.north()));
 			scene.effects.indicateRedstone(pos.north());
-			scene.world.setKineticSpeed(util.select.fromTo(pos, pos.up()), 4);
-			scene.effects.rotationSpeedIndicator(pos.up());
+			scene.world.setKineticSpeed(util.select.fromTo(pos, pos.above()), 4);
+			scene.effects.rotationSpeedIndicator(pos.above());
 		}
 
 		scene.overlay.showText(90)

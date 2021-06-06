@@ -108,7 +108,7 @@ public class BaseConfigScreen extends ConfigScreen {
 		widgets.clear();
 		super.init();
 
-		TextStencilElement clientText = new TextStencilElement(client.fontRenderer, new StringTextComponent(clientTile).formatted(TextFormatting.BOLD)).centered(true, true);
+		TextStencilElement clientText = new TextStencilElement(minecraft.font, new StringTextComponent(clientTile).withStyle(TextFormatting.BOLD)).centered(true, true);
 		widgets.add(clientConfigWidget = new BoxWidget(width / 2 - 100, height / 2 - 15 - 30, 200, 16).showingElement(clientText));
 
 		if (clientSpec != null) {
@@ -120,7 +120,7 @@ public class BaseConfigScreen extends ConfigScreen {
 			clientText.withElementRenderer(DISABLED_RENDERER);
 		}
 
-		TextStencilElement commonText = new TextStencilElement(client.fontRenderer, new StringTextComponent(commonTile).formatted(TextFormatting.BOLD)).centered(true, true);
+		TextStencilElement commonText = new TextStencilElement(minecraft.font, new StringTextComponent(commonTile).withStyle(TextFormatting.BOLD)).centered(true, true);
 		widgets.add(commonConfigWidget = new BoxWidget(width / 2 - 100, height / 2 - 15, 200, 16).showingElement(commonText));
 
 		if (commonSpec != null) {
@@ -132,10 +132,10 @@ public class BaseConfigScreen extends ConfigScreen {
 			commonText.withElementRenderer(DISABLED_RENDERER);
 		}
 
-		TextStencilElement serverText = new TextStencilElement(client.fontRenderer, new StringTextComponent(serverTile).formatted(TextFormatting.BOLD)).centered(true, true);
+		TextStencilElement serverText = new TextStencilElement(minecraft.font, new StringTextComponent(serverTile).withStyle(TextFormatting.BOLD)).centered(true, true);
 		widgets.add(serverConfigWidget = new BoxWidget(width / 2 - 100, height / 2 - 15 + 30, 200, 16).showingElement(serverText));
 
-		if (serverSpec != null && Minecraft.getInstance().world != null) {
+		if (serverSpec != null && Minecraft.getInstance().level != null) {
 			serverConfigWidget.withCallback(() -> ScreenOpener.open(new SubMenuConfigScreen(this, ModConfig.Type.SERVER, serverSpec)));
 			serverText.withElementRenderer(BoxWidget.gradientFactory.apply(serverConfigWidget));
 		} else {

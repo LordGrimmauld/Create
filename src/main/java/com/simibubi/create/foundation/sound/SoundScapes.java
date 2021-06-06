@@ -47,7 +47,7 @@ public class SoundScapes {
 	}
 
 	private static SoundScape kinetic(float pitch, AmbienceGroup group) {
-		return new SoundScape(pitch, group).continuous(SoundEvents.ENTITY_MINECART_INSIDE, .25f, 1);
+		return new SoundScape(pitch, group).continuous(SoundEvents.MINECART_INSIDE, .25f, 1);
 	}
 
 	private static SoundScape cogwheel(float pitch, AmbienceGroup group) {
@@ -109,18 +109,18 @@ public class SoundScapes {
 		BlockPos playerLocation = getCameraPos();
 		for (Map<PitchGroup, Set<BlockPos>> map : counter.values())
 			for (Set<BlockPos> set : map.values())
-				set.removeIf(p -> !playerLocation.withinDistance(p, MAX_AMBIENT_SOURCE_DISTANCE));
+				set.removeIf(p -> !playerLocation.closerThan(p, MAX_AMBIENT_SOURCE_DISTANCE));
 	}
 
 	protected static boolean outOfRange(BlockPos pos) {
-		return !getCameraPos().withinDistance(pos, MAX_AMBIENT_SOURCE_DISTANCE);
+		return !getCameraPos().closerThan(pos, MAX_AMBIENT_SOURCE_DISTANCE);
 	}
 
 	protected static BlockPos getCameraPos() {
-		Entity renderViewEntity = Minecraft.getInstance().renderViewEntity;
+		Entity renderViewEntity = Minecraft.getInstance().cameraEntity;
 		if (renderViewEntity == null)
 			return BlockPos.ZERO;
-		BlockPos playerLocation = renderViewEntity.getBlockPos();
+		BlockPos playerLocation = renderViewEntity.blockPosition();
 		return playerLocation;
 	}
 

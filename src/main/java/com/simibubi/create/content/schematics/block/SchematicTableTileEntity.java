@@ -32,7 +32,7 @@ public class SchematicTableTileEntity extends SyncedTileEntity implements ITicka
 		@Override
 		protected void onContentsChanged(int slot) {
 			super.onContentsChanged(slot);
-			markDirty();
+			setChanged();
 		}
 	}
 
@@ -44,15 +44,15 @@ public class SchematicTableTileEntity extends SyncedTileEntity implements ITicka
 	}
 
 	public void sendToContainer(PacketBuffer buffer) {
-		buffer.writeBlockPos(getPos());
-		buffer.writeCompoundTag(getUpdateTag());
+		buffer.writeBlockPos(getBlockPos());
+		buffer.writeNbt(getUpdateTag());
 	}
 
 	@Override
-	public void fromTag(BlockState state, CompoundNBT compound) {
+	public void load(BlockState state, CompoundNBT compound) {
 		inventory.deserializeNBT(compound.getCompound("Inventory"));
 		readClientUpdate(state, compound);
-		super.fromTag(state, compound);
+		super.load(state, compound);
 	}
 
 	@Override
@@ -69,10 +69,10 @@ public class SchematicTableTileEntity extends SyncedTileEntity implements ITicka
 	}
 
 	@Override
-	public CompoundNBT write(CompoundNBT compound) {
+	public CompoundNBT save(CompoundNBT compound) {
 		compound.put("Inventory", inventory.serializeNBT());
 		writeToClient(compound);
-		return super.write(compound);
+		return super.save(compound);
 	}
 
 	@Override
@@ -90,7 +90,7 @@ public class SchematicTableTileEntity extends SyncedTileEntity implements ITicka
 		// Update Client Tile
 		if (sendUpdate) {
 			sendUpdate = false;
-			world.notifyBlockUpdate(pos, getBlockState(), getBlockState(), 6);
+			level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 6);
 		}
 	}
 	

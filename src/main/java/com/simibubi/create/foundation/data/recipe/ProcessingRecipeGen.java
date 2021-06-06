@@ -19,6 +19,8 @@ import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.IItemProvider;
 import net.minecraftforge.fluids.FluidAttributes;
 
+import com.simibubi.create.foundation.data.recipe.CreateRecipeProvider.GeneratedRecipe;
+
 public abstract class ProcessingRecipeGen extends CreateRecipeProvider {
 
 	protected static List<ProcessingRecipeGen> generators = new ArrayList<>();
@@ -46,10 +48,10 @@ public abstract class ProcessingRecipeGen extends CreateRecipeProvider {
 			}
 			
 			@Override
-			public void act(DirectoryCache dc) throws IOException {
+			public void run(DirectoryCache dc) throws IOException {
 				generators.forEach(g -> {
 					try {
-						g.act(dc);
+						g.run(dc);
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -74,7 +76,7 @@ public abstract class ProcessingRecipeGen extends CreateRecipeProvider {
 			transform
 				.apply(new ProcessingRecipeBuilder<>(serializer.getFactory(), Create.asResource(iItemProvider.asItem()
 					.getRegistryName()
-					.getPath())).withItemIngredients(Ingredient.fromItems(iItemProvider)))
+					.getPath())).withItemIngredients(Ingredient.of(iItemProvider)))
 				.build(c);
 		};
 		all.add(generatedRecipe);

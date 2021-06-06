@@ -33,21 +33,21 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 public class RenderHooksMixin {
 
 	@Shadow
-	private ClientWorld world;
+	private ClientWorld level;
 
 	/**
 	 * JUSTIFICATION: This method is called once per layer per frame. It allows us to perform
 	 * layer-correct custom rendering. RenderWorldLast is not refined enough for rendering world objects.
 	 * This should probably be a forge event.
 	 */
-	@Inject(at = @At("TAIL"), method = "renderLayer")
+	@Inject(at = @At("TAIL"), method = "renderChunkLayer")
 	private void renderLayer(RenderType type, MatrixStack stack, double camX, double camY, double camZ,
 		CallbackInfo ci) {
 		if (!Backend.available())
 			return;
 
-		Matrix4f viewProjection = stack.peek()
-			.getModel()
+		Matrix4f viewProjection = stack.last()
+			.pose()
 			.copy();
 		viewProjection.multiplyBackward(Backend.projectionMatrix);
 
@@ -58,36 +58,36 @@ public class RenderHooksMixin {
 		GL20.glUseProgram(0);
 	}
 
-	@Inject(at = @At(value = "INVOKE", target = "net.minecraft.client.renderer.WorldRenderer.updateChunks(J)V"), method = "render")
+	@Inject(at = @At(value = "INVOKE", target = "net.minecraft.client.renderer.WorldRenderer.compileChunksUntil(J)V"), method = "renderLevel")
 	private void setupFrame(MatrixStack p_228426_1_, float p_228426_2_, long p_228426_3_, boolean p_228426_5_,
 		ActiveRenderInfo info, GameRenderer p_228426_7_, LightTexture p_228426_8_, Matrix4f p_228426_9_,
 		CallbackInfo ci) {
-		Vector3d cameraPos = info.getProjectedView();
-		double camX = cameraPos.getX();
-		double camY = cameraPos.getY();
-		double camZ = cameraPos.getZ();
+		Vector3d cameraPos = info.getPosition();
+		double camX = cameraPos.x();
+		double camY = cameraPos.y();
+		double camZ = cameraPos.z();
 
-		CreateClient.KINETIC_RENDERER.get(world)
+		CreateClient.KINETIC_RENDERER.get(level)
 			.beginFrame(info, camX, camY, camZ);
 		ContraptionRenderDispatcher.beginFrame(info, camX, camY, camZ);
 	}
 
-	@Inject(at = @At("TAIL"), method = "scheduleBlockRerenderIfNeeded")
+	@Inject(at = @At("TAIL"), method = "Lnet/minecraft/client/renderer/WorldRenderer;setBlockDirty(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/block/BlockState;)V")
 	private void checkUpdate(BlockPos pos, BlockState lastState, BlockState newState, CallbackInfo ci) {
-		CreateClient.KINETIC_RENDERER.get(world)
-			.update(world.getTileEntity(pos));
+		CreateClient.KINETIC_RENDERER.get(level)
+			.update(level.getBlockEntity(pos));
 	}
 
-	@Inject(at = @At("TAIL"), method = "loadRenderers")
+	@Inject(at = @At("TAIL"), method = "allChanged")
 	private void refresh(CallbackInfo ci) {
 		ContraptionRenderDispatcher.invalidateAll();
 		OptifineHandler.refresh();
 		Backend.refresh();
 
-		if (Backend.canUseInstancing() && world != null) {
-			KineticRenderer kineticRenderer = CreateClient.KINETIC_RENDERER.get(world);
+		if (Backend.canUseInstancing() && level != null) {
+			KineticRenderer kineticRenderer = CreateClient.KINETIC_RENDERER.get(level);
 			kineticRenderer.invalidate();
-			world.loadedTileEntityList.forEach(kineticRenderer::add);
+			level.blockEntityList.forEach(kineticRenderer::add);
 		}
 	}
 }

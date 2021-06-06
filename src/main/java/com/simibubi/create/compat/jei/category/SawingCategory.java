@@ -39,7 +39,7 @@ public class SawingCategory extends CreateRecipeCategory<CuttingRecipe> {
 	public void setRecipe(IRecipeLayout recipeLayout, CuttingRecipe recipe, IIngredients ingredients) {
 		IGuiItemStackGroup itemStacks = recipeLayout.getItemStacks();
 		itemStacks.init(0, true, 43, 4);
-		itemStacks.set(0, Arrays.asList(recipe.getIngredients().get(0).getMatchingStacks()));
+		itemStacks.set(0, Arrays.asList(recipe.getIngredients().get(0).getItems()));
 
 		List<ProcessingOutput> results = recipe.getRollableResults();
 		for (int outputIndex = 0; outputIndex < results.size(); outputIndex++) {

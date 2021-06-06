@@ -39,7 +39,7 @@ public abstract class ConfigScreen extends AbstractSimiScreen {
 	 * */
 
 	public static final PhysicalFloat cogSpin = PhysicalFloat.create().withDrag(0.3).addForce(new Force.Static(.2f));
-	public static final BlockState cogwheelState = AllBlocks.LARGE_COGWHEEL.getDefaultState().with(CogWheelBlock.AXIS, Direction.Axis.Y);
+	public static final BlockState cogwheelState = AllBlocks.LARGE_COGWHEEL.getDefaultState().setValue(CogWheelBlock.AXIS, Direction.Axis.Y);
 	public static final Map<String, Object> changes = new HashMap<>();
 	public static String modID = null;
 	protected final Screen parent;
@@ -61,7 +61,7 @@ public abstract class ConfigScreen extends AbstractSimiScreen {
 
 	@Override
 	protected void renderWindowBackground(MatrixStack ms, int mouseX, int mouseY, float partialTicks) {
-		if (this.client != null && this.client.world != null) {
+		if (this.minecraft != null && this.minecraft.level != null) {
 			fill(ms, 0, 0, this.width, this.height, 0xb0_282c34);
 		} else {
 			fill(ms, 0, 0, this.width, this.height, 0xff_282c34);
@@ -101,7 +101,7 @@ public abstract class ConfigScreen extends AbstractSimiScreen {
 	}
 
 	protected void renderCog(MatrixStack ms, float partialTicks) {
-		ms.push();
+		ms.pushPose();
 
 		ms.translate(-100, 100, -100);
 		ms.scale(200, 200, 1);
@@ -109,6 +109,6 @@ public abstract class ConfigScreen extends AbstractSimiScreen {
 				.rotateBlock(22.5, cogSpin.getValue(partialTicks), 22.5)
 				.render(ms);
 
-		ms.pop();
+		ms.popPose();
 	}
 }

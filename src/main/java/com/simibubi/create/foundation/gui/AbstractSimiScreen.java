@@ -44,9 +44,9 @@ public abstract class AbstractSimiScreen extends Screen {
 	public void render(MatrixStack ms, int mouseX, int mouseY, float partialTicks) {
 		partialTicks = partialTicks == 10 ? 0
 			: Minecraft.getInstance()
-				.getRenderPartialTicks();
+				.getFrameTime();
 
-		ms.push();
+		ms.pushPose();
 
 		renderWindowBackground(ms, mouseX, mouseY, partialTicks);
 		renderWindow(ms, mouseX, mouseY, partialTicks);
@@ -54,7 +54,7 @@ public abstract class AbstractSimiScreen extends Screen {
 			widget.render(ms, mouseX, mouseY, partialTicks);
 		renderWindowForeground(ms, mouseX, mouseY, partialTicks);
 
-		ms.pop();
+		ms.popPose();
 	}
 
 	protected void renderWindowBackground(MatrixStack ms, int mouseX, int mouseY, float partialTicks) {
@@ -83,8 +83,8 @@ public abstract class AbstractSimiScreen extends Screen {
 		if (super.keyPressed(code, p_keyPressed_2_, p_keyPressed_3_))
 			return true;
 
-		InputMappings.Input mouseKey = InputMappings.getInputByCode(code, p_keyPressed_2_);
-		if (this.client.gameSettings.keyBindInventory.isActiveAndMatches(mouseKey)) {
+		InputMappings.Input mouseKey = InputMappings.getKey(code, p_keyPressed_2_);
+		if (this.minecraft.options.keyInventory.isActiveAndMatches(mouseKey)) {
 			this.onClose();
 			return true;
 		}
@@ -138,7 +138,7 @@ public abstract class AbstractSimiScreen extends Screen {
 
 			if (widget instanceof AbstractSimiWidget) {
 				if (!((AbstractSimiWidget) widget).getToolTip().isEmpty())
-					renderTooltip(ms, ((AbstractSimiWidget) widget).getToolTip(), mouseX, mouseY);
+					renderComponentTooltip(ms, ((AbstractSimiWidget) widget).getToolTip(), mouseX, mouseY);
 
 			} else {
 				widget.renderToolTip(ms, mouseX, mouseY);

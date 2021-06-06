@@ -36,78 +36,78 @@ public class AllSoundEvents {
 	public static final SoundEntry
 
 	SCHEMATICANNON_LAUNCH_BLOCK = create("schematicannon_launch_block").subtitle("Schematicannon fires")
-		.playExisting(SoundEvents.ENTITY_GENERIC_EXPLODE, .1f, 1.1f)
+		.playExisting(SoundEvents.GENERIC_EXPLODE, .1f, 1.1f)
 		.category(SoundCategory.BLOCKS)
 		.build(),
 
 		SCHEMATICANNON_FINISH = create("schematicannon_finish").subtitle("Schematicannon dings")
-			.playExisting(SoundEvents.BLOCK_NOTE_BLOCK_BELL, 1, .7f)
+			.playExisting(SoundEvents.NOTE_BLOCK_BELL, 1, .7f)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
 		DEPOT_SLIDE = create("depot_slide").subtitle("Item slides")
-			.playExisting(SoundEvents.BLOCK_SAND_BREAK, .125f, 1.5f)
+			.playExisting(SoundEvents.SAND_BREAK, .125f, 1.5f)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
 		DEPOT_PLOP = create("depot_plop").subtitle("Item lands")
-			.playExisting(SoundEvents.ENTITY_ITEM_FRAME_ADD_ITEM, .25f, 1.25f)
+			.playExisting(SoundEvents.ITEM_FRAME_ADD_ITEM, .25f, 1.25f)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
 		FUNNEL_FLAP = create("funnel_flap").subtitle("Funnel Flaps")
-			.playExisting(SoundEvents.ENTITY_ITEM_FRAME_ROTATE_ITEM, .125f, 1.5f)
-			.playExisting(SoundEvents.BLOCK_WOOL_BREAK, .0425f, .75f)
+			.playExisting(SoundEvents.ITEM_FRAME_ROTATE_ITEM, .125f, 1.5f)
+			.playExisting(SoundEvents.WOOL_BREAK, .0425f, .75f)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
 		SLIME_ADDED = create("slime_added").subtitle("Slime squishes")
-			.playExisting(SoundEvents.BLOCK_SLIME_BLOCK_PLACE)
+			.playExisting(SoundEvents.SLIME_BLOCK_PLACE)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
 		MECHANICAL_PRESS_ACTIVATION = create("mechanical_press_activation").subtitle("Mechanical Press clangs")
-			.playExisting(SoundEvents.BLOCK_ANVIL_LAND, .125f, 1f)
-			.playExisting(SoundEvents.ENTITY_ITEM_BREAK, .5f, 1f)
+			.playExisting(SoundEvents.ANVIL_LAND, .125f, 1f)
+			.playExisting(SoundEvents.ITEM_BREAK, .5f, 1f)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
 		MECHANICAL_PRESS_ACTIVATION_ON_BELT =
 			create("mechanical_press_activation_belt").subtitle("Mechanical Press bonks")
-				.playExisting(SoundEvents.BLOCK_WOOL_HIT, .75f, 1f)
-				.playExisting(SoundEvents.ENTITY_ITEM_BREAK, .15f, .75f)
+				.playExisting(SoundEvents.WOOL_HIT, .75f, 1f)
+				.playExisting(SoundEvents.ITEM_BREAK, .15f, .75f)
 				.category(SoundCategory.BLOCKS)
 				.build(),
 
 		MIXING = create("mixing").subtitle("Mixing Noises")
-			.playExisting(SoundEvents.BLOCK_GILDED_BLACKSTONE_BREAK, .125f, .5f)
-			.playExisting(SoundEvents.BLOCK_NETHERRACK_BREAK, .125f, .5f)
+			.playExisting(SoundEvents.GILDED_BLACKSTONE_BREAK, .125f, .5f)
+			.playExisting(SoundEvents.NETHERRACK_BREAK, .125f, .5f)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
 		CRANKING = create("cranking").subtitle("Hand Crank turns")
-			.playExisting(SoundEvents.BLOCK_WOOD_PLACE, .075f, .5f)
-			.playExisting(SoundEvents.BLOCK_WOODEN_BUTTON_CLICK_OFF, .025f, .5f)
+			.playExisting(SoundEvents.WOOD_PLACE, .075f, .5f)
+			.playExisting(SoundEvents.WOODEN_BUTTON_CLICK_OFF, .025f, .5f)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
 		WORLDSHAPER_PLACE = create("worldshaper_place").subtitle("Worldshaper zaps")
-			.playExisting(SoundEvents.BLOCK_NOTE_BLOCK_BASEDRUM)
+			.playExisting(SoundEvents.NOTE_BLOCK_BASEDRUM)
 			.category(SoundCategory.PLAYERS)
 			.build(),
 
 		SCROLL_VALUE = create("scroll_value").subtitle("Scroll-input clicks")
-			.playExisting(SoundEvents.BLOCK_NOTE_BLOCK_HAT, .124f, 1f)
+			.playExisting(SoundEvents.NOTE_BLOCK_HAT, .124f, 1f)
 			.category(SoundCategory.PLAYERS)
 			.build(),
 
 		CONFIRM = create("confirm").subtitle("Affirmative ding")
-			.playExisting(SoundEvents.BLOCK_NOTE_BLOCK_BELL, 0.5f, 0.8f)
+			.playExisting(SoundEvents.NOTE_BLOCK_BELL, 0.5f, 0.8f)
 			.category(SoundCategory.PLAYERS)
 			.build(),
 
 		DENY = create("deny").subtitle("Declining boop")
-			.playExisting(SoundEvents.BLOCK_NOTE_BLOCK_BASS, 1f, 0.5f)
+			.playExisting(SoundEvents.NOTE_BLOCK_BASS, 1f, 0.5f)
 			.category(SoundCategory.PLAYERS)
 			.build(),
 
@@ -116,40 +116,40 @@ public class AllSoundEvents {
 			.build(),
 
 		CONTRAPTION_ASSEMBLE = create("contraption_assemble").subtitle("Contraption moves")
-			.playExisting(SoundEvents.BLOCK_WOODEN_TRAPDOOR_OPEN, .5f, .5f)
-			.playExisting(SoundEvents.BLOCK_CHEST_OPEN, .045f, .74f)
+			.playExisting(SoundEvents.WOODEN_TRAPDOOR_OPEN, .5f, .5f)
+			.playExisting(SoundEvents.CHEST_OPEN, .045f, .74f)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
 		CONTRAPTION_DISASSEMBLE = create("contraption_disassemble").subtitle("Contraption stops")
-			.playExisting(SoundEvents.BLOCK_IRON_TRAPDOOR_CLOSE, .35f, .75f)
+			.playExisting(SoundEvents.IRON_TRAPDOOR_CLOSE, .35f, .75f)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
 		WRENCH_ROTATE = create("wrench_rotate").subtitle("Wrench used")
-			.playExisting(SoundEvents.BLOCK_WOODEN_TRAPDOOR_CLOSE, .25f, 1.25f)
+			.playExisting(SoundEvents.WOODEN_TRAPDOOR_CLOSE, .25f, 1.25f)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
 		WRENCH_REMOVE = create("wrench_remove").subtitle("Component breaks")
-			.playExisting(SoundEvents.ENTITY_ITEM_PICKUP, .25f, .75f)
-			.playExisting(SoundEvents.BLOCK_NETHERITE_BLOCK_HIT, .25f, .75f)
+			.playExisting(SoundEvents.ITEM_PICKUP, .25f, .75f)
+			.playExisting(SoundEvents.NETHERITE_BLOCK_HIT, .25f, .75f)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
 		CRAFTER_CLICK = create("crafter_click").subtitle("Crafter clicks")
-			.playExisting(SoundEvents.BLOCK_NETHERITE_BLOCK_HIT, .25f, 1)
-			.playExisting(SoundEvents.BLOCK_WOODEN_TRAPDOOR_OPEN, .125f, 1)
+			.playExisting(SoundEvents.NETHERITE_BLOCK_HIT, .25f, 1)
+			.playExisting(SoundEvents.WOODEN_TRAPDOOR_OPEN, .125f, 1)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
 		CRAFTER_CRAFT = create("crafter_craft").subtitle("Crafter crafts")
-			.playExisting(SoundEvents.ENTITY_ITEM_BREAK, .125f, .75f)
+			.playExisting(SoundEvents.ITEM_BREAK, .125f, .75f)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
 		COPPER_ARMOR_EQUIP = create("copper_armor_equip").subtitle("Diving equipment clinks")
-			.playExisting(SoundEvents.ITEM_ARMOR_EQUIP_GOLD, 1f, 1f)
+			.playExisting(SoundEvents.ARMOR_EQUIP_GOLD, 1f, 1f)
 			.category(SoundCategory.PLAYERS)
 			.build(),
 
@@ -159,12 +159,12 @@ public class AllSoundEvents {
 			.build(),
 
 		CONTROLLER_CLICK = create("controller_click").subtitle("Controller clicks")
-			.playExisting(SoundEvents.ENTITY_ITEM_FRAME_ADD_ITEM, .35f, 1f)
+			.playExisting(SoundEvents.ITEM_FRAME_ADD_ITEM, .35f, 1f)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
 		SAW_ACTIVATE_WOOD = create("saw_activate_wood").subtitle("Mechanical Saw activates")
-			.playExisting(SoundEvents.ENTITY_BOAT_PADDLE_LAND, .75f, 1.5f)
+			.playExisting(SoundEvents.BOAT_PADDLE_LAND, .75f, 1.5f)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
@@ -174,17 +174,17 @@ public class AllSoundEvents {
 			.build(),
 
 		SAW_PROCESS = create("saw_process").subtitle("Mechanical Saw processes")
-			.playExisting(SoundEvents.BLOCK_SAND_PLACE, .075f, .75f)
+			.playExisting(SoundEvents.SAND_PLACE, .075f, .75f)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 			
 		SAW_IDLE = create("saw_idle").subtitle("Mechanical Saw turns")
-			.playExisting(SoundEvents.ENTITY_BOAT_PADDLE_LAND)
+			.playExisting(SoundEvents.BOAT_PADDLE_LAND)
 			.category(SoundCategory.BLOCKS)
 			.build(),
 
 		BLAZE_MUNCH = create("blaze_munch").subtitle("Blaze Burner munches")
-			.playExisting(SoundEvents.ENTITY_GENERIC_EAT, .5f, 1f)
+			.playExisting(SoundEvents.GENERIC_EAT, .5f, 1f)
 			.category(SoundCategory.BLOCKS)
 			.build();
 
@@ -233,7 +233,7 @@ public class AllSoundEvents {
 		}
 
 		@Override
-		public void act(DirectoryCache cache) throws IOException {
+		public void run(DirectoryCache cache) throws IOException {
 			generate(generator.getOutputFolder(), cache);
 		}
 
@@ -360,7 +360,7 @@ public class AllSoundEvents {
 
 		public void playFrom(Entity entity, float volume, float pitch) {
 			if (!entity.isSilent())
-				play(entity.world, null, entity.getBlockPos(), volume, pitch);
+				play(entity.level, null, entity.blockPosition(), volume, pitch);
 		}
 
 		public void play(World world, PlayerEntity entity, BlockPos pos, float volume, float pitch) {
@@ -423,7 +423,7 @@ public class AllSoundEvents {
 				JsonArray list = new JsonArray();
 				JsonObject s = new JsonObject();
 				s.addProperty("name", pair.getFirst()
-					.getName()
+					.getLocation()
 					.toString());
 				s.addProperty("type", "event");
 				list.add(s);
@@ -447,7 +447,7 @@ public class AllSoundEvents {
 		public void playAt(World world, double x, double y, double z, float volume, float pitch, boolean fade) {
 			for (Pair<SoundEvent, Couple<Float>> pair : compiledEvents) {
 				Couple<Float> volPitch = pair.getSecond();
-				world.playSound(x, y, z, pair.getFirst(), category, volPitch.getFirst() * volume,
+				world.playLocalSound(x, y, z, pair.getFirst(), category, volPitch.getFirst() * volume,
 					volPitch.getSecond() * pitch, fade);
 			}
 		}
@@ -494,7 +494,7 @@ public class AllSoundEvents {
 
 		@Override
 		public void playAt(World world, double x, double y, double z, float volume, float pitch, boolean fade) {
-			world.playSound(x, y, z, event, category, volume, pitch, fade);
+			world.playLocalSound(x, y, z, event, category, volume, pitch, fade);
 		}
 
 	}

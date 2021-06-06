@@ -26,20 +26,20 @@ public class BlazeBurnerHandler {
 			.getType() != RayTraceResult.Type.BLOCK)
 			return;
 
-		TileEntity tile = event.getThrowable().world.getTileEntity(new BlockPos(event.getRayTraceResult()
-			.getHitVec()));
+		TileEntity tile = event.getThrowable().level.getBlockEntity(new BlockPos(event.getRayTraceResult()
+			.getLocation()));
 		if (!(tile instanceof BlazeBurnerTileEntity)) {
 			return;
 		}
 
 		event.setCanceled(true);
 		event.getThrowable()
-			.setMotion(Vector3d.ZERO);
+			.setDeltaMovement(Vector3d.ZERO);
 		event.getThrowable()
 			.remove();
 
-		World world = event.getThrowable().world;
-		if (world.isRemote)
+		World world = event.getThrowable().level;
+		if (world.isClientSide)
 			return;
 		
 		BlazeBurnerTileEntity heater = (BlazeBurnerTileEntity) tile;
@@ -51,7 +51,7 @@ public class BlazeBurnerHandler {
 			heater.notifyUpdate();
 		}
 		
-		AllSoundEvents.BLAZE_MUNCH.playOnServer(world, heater.getPos());
+		AllSoundEvents.BLAZE_MUNCH.playOnServer(world, heater.getBlockPos());
 	}
 
 }

@@ -49,10 +49,10 @@ public class AdjustableCrateScreen extends AbstractSimiContainerScreen<Adjustabl
 		super.init();
 		widgets.clear();
 
-		allowedItemsLabel = new Label(guiLeft + 100 + 69, guiTop + 108, StringTextComponent.EMPTY).colored(0xfefefe)
+		allowedItemsLabel = new Label(leftPos + 100 + 69, topPos + 108, StringTextComponent.EMPTY).colored(0xfefefe)
 			.withShadow();
-		allowedItems = new ScrollInput(guiLeft + 100 + 65, guiTop + 104, 41, 14).titled(storageSpace.copy())
-			.withRange(1, (container.doubleCrate ? 2049 : 1025))
+		allowedItems = new ScrollInput(leftPos + 100 + 65, topPos + 104, 41, 14).titled(storageSpace.plainCopy())
+			.withRange(1, (menu.doubleCrate ? 2049 : 1025))
 			.writingTo(allowedItemsLabel)
 			.withShiftStep(64)
 			.setState(te.allowedAmount)
@@ -62,68 +62,68 @@ public class AdjustableCrateScreen extends AbstractSimiContainerScreen<Adjustabl
 		widgets.add(allowedItems);
 
 		extraAreas = new ArrayList<>();
-		extraAreas.add(new Rectangle2d(guiLeft + ADJUSTABLE_CRATE.width + 110, guiTop + 46, 71, 70));
+		extraAreas.add(new Rectangle2d(leftPos + ADJUSTABLE_CRATE.width + 110, topPos + 46, 71, 70));
 	}
 
 	@Override
 	protected void renderWindow(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-		int crateLeft = guiLeft + 100;
-		int crateTop = guiTop;
-		int invLeft = guiLeft + 50;
+		int crateLeft = leftPos + 100;
+		int crateTop = topPos;
+		int invLeft = leftPos + 50;
 		int invTop = crateTop + ADJUSTABLE_CRATE.height + 10;
 		int fontColor = 0x4B3A22;
 
-		if (container.doubleCrate) {
+		if (menu.doubleCrate) {
 			crateLeft -= 72;
 			ADJUSTABLE_DOUBLE_CRATE.draw(matrixStack, this, crateLeft, crateTop);
 		} else
 			ADJUSTABLE_CRATE.draw(matrixStack,this, crateLeft, crateTop);
 
-		textRenderer.drawWithShadow(matrixStack, title, crateLeft - 3 + (ADJUSTABLE_CRATE.width - textRenderer.getWidth(title)) / 2,
+		font.drawShadow(matrixStack, title, crateLeft - 3 + (ADJUSTABLE_CRATE.width - font.width(title)) / 2,
 			crateTop + 3, 0xfefefe);
 		String itemCount = "" + te.itemCount;
-		textRenderer.draw(matrixStack, itemCount, guiLeft + 100 + 53 - textRenderer.getStringWidth(itemCount), crateTop + 107, fontColor);
+		font.draw(matrixStack, itemCount, leftPos + 100 + 53 - font.width(itemCount), crateTop + 107, fontColor);
 
 		PLAYER_INVENTORY.draw(matrixStack, this, invLeft, invTop);
-		textRenderer.draw(matrixStack, playerInventory.getDisplayName(), invLeft + 7, invTop + 6, 0x666666);
+		font.draw(matrixStack, inventory.getDisplayName(), invLeft + 7, invTop + 6, 0x666666);
 
-		for (int slot = 0; slot < (container.doubleCrate ? 32 : 16); slot++) {
+		for (int slot = 0; slot < (menu.doubleCrate ? 32 : 16); slot++) {
 			if (allowedItems.getState() > slot * 64)
 				continue;
-			int slotsPerRow = (container.doubleCrate ? 8 : 4);
+			int slotsPerRow = (menu.doubleCrate ? 8 : 4);
 			int x = crateLeft + 22 + (slot % slotsPerRow) * 18;
 			int y = crateTop + 19 + (slot / slotsPerRow) * 18;
 			AllGuiTextures.ADJUSTABLE_CRATE_LOCKED_SLOT.draw(matrixStack, this, x, y);
 		}
 
 		GuiGameElement.of(renderedItem)
-				.<GuiGameElement.GuiRenderBuilder>at(guiLeft + ADJUSTABLE_CRATE.width + 110, guiTop + 70, -150)
+				.<GuiGameElement.GuiRenderBuilder>at(leftPos + ADJUSTABLE_CRATE.width + 110, topPos + 70, -150)
 				.scale(5)
 				.render(matrixStack);
 	}
 
 	@Override
 	public void removed() {
-		AllPackets.channel.sendToServer(new ConfigureFlexcratePacket(te.getPos(), allowedItems.getState()));
+		AllPackets.channel.sendToServer(new ConfigureFlexcratePacket(te.getBlockPos(), allowedItems.getState()));
 	}
 
 	@Override
 	public void tick() {
 		super.tick();
 
-		if (!AllBlocks.ADJUSTABLE_CRATE.has(client.world.getBlockState(te.getPos())))
-			client.displayGuiScreen(null);
+		if (!AllBlocks.ADJUSTABLE_CRATE.has(minecraft.level.getBlockState(te.getBlockPos())))
+			minecraft.setScreen(null);
 
 		if (lastModification >= 0)
 			lastModification++;
 
 		if (lastModification >= 15) {
 			lastModification = -1;
-			AllPackets.channel.sendToServer(new ConfigureFlexcratePacket(te.getPos(), allowedItems.getState()));
+			AllPackets.channel.sendToServer(new ConfigureFlexcratePacket(te.getBlockPos(), allowedItems.getState()));
 		}
 
-		if (container.doubleCrate != te.isDoubleCrate())
-			container.playerInventory.player.closeScreen();
+		if (menu.doubleCrate != te.isDoubleCrate())
+			menu.playerInventory.player.closeContainer();
 	}
 
 	@Override

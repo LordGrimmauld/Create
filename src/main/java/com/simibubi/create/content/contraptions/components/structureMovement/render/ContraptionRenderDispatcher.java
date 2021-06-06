@@ -56,7 +56,7 @@ public class ContraptionRenderDispatcher {
 	protected static PlacementSimulationWorld renderWorld;
 
 	public static void tick() {
-		if (Minecraft.getInstance().isGamePaused()) return;
+		if (Minecraft.getInstance().isPaused()) return;
 
 		for (RenderedContraption contraption : renderers.values()) {
 			contraption.getLighter().tick(contraption);
@@ -76,7 +76,7 @@ public class ContraptionRenderDispatcher {
 
         if (renderers.isEmpty()) return;
 
-        layer.startDrawing();
+        layer.setupRenderState();
         GL11.glEnable(GL13.GL_TEXTURE_3D);
         GL13.glActiveTexture(GL40.GL_TEXTURE4); // the shaders expect light volumes to be in texture 4
 
@@ -95,13 +95,13 @@ public class ContraptionRenderDispatcher {
 			}
 		}
 
-		layer.endDrawing();
+		layer.clearRenderState();
 		GL11.glDisable(GL13.GL_TEXTURE_3D);
 		GL13.glActiveTexture(GL40.GL_TEXTURE0);
 	}
 
 	private static RenderedContraption getRenderer(World world, Contraption c) {
-		int entityId = c.entity.getEntityId();
+		int entityId = c.entity.getId();
 		RenderedContraption contraption = renderers.get(entityId);
 
 		if (contraption == null) {
@@ -114,28 +114,28 @@ public class ContraptionRenderDispatcher {
 
 	public static void render(AbstractContraptionEntity entity, MatrixStack ms, IRenderTypeBuffer buffers,
 							  MatrixStack msLocal, Contraption contraption) {
-		if (Backend.canUseVBOs() && Backend.isFlywheelWorld(entity.world)) {
-			ContraptionRenderDispatcher.renderDynamic(entity.world, contraption, ms, msLocal, buffers);
+		if (Backend.canUseVBOs() && Backend.isFlywheelWorld(entity.level)) {
+			ContraptionRenderDispatcher.renderDynamic(entity.level, contraption, ms, msLocal, buffers);
 		} else {
-			ContraptionRenderDispatcher.renderDynamic(entity.world, contraption, ms, msLocal, buffers);
-			ContraptionRenderDispatcher.renderStructure(entity.world, contraption, ms, msLocal, buffers);
+			ContraptionRenderDispatcher.renderDynamic(entity.level, contraption, ms, msLocal, buffers);
+			ContraptionRenderDispatcher.renderStructure(entity.level, contraption, ms, msLocal, buffers);
 		}
 	}
 
 	public static void renderStructure(World world, Contraption c, MatrixStack ms, MatrixStack msLocal,
 									   IRenderTypeBuffer buffer) {
 		SuperByteBufferCache bufferCache = CreateClient.BUFFER_CACHE;
-		List<RenderType> blockLayers = RenderType.getBlockLayers();
+		List<RenderType> blockLayers = RenderType.chunkBufferLayers();
 
-		buffer.getBuffer(RenderType.getSolid());
+		buffer.getBuffer(RenderType.solid());
 		for (int i = 0; i < blockLayers.size(); i++) {
 			RenderType layer = blockLayers.get(i);
 			Pair<Contraption, Integer> key = Pair.of(c, i);
 			SuperByteBuffer contraptionBuffer = bufferCache.get(CONTRAPTION, key, () -> buildStructureBuffer(c, layer));
 			if (contraptionBuffer.isEmpty())
 				continue;
-			Matrix4f model = msLocal.peek()
-					.getModel();
+			Matrix4f model = msLocal.last()
+					.pose();
 			contraptionBuffer.light(model)
 					.renderInto(ms, buffer.getBuffer(layer));
 		}
@@ -145,7 +145,7 @@ public class ContraptionRenderDispatcher {
 									 IRenderTypeBuffer buffer) {
 		renderTileEntities(world, c, ms, msLocal, buffer);
 		if (buffer instanceof IRenderTypeBuffer.Impl)
-			((IRenderTypeBuffer.Impl) buffer).draw();
+			((IRenderTypeBuffer.Impl) buffer).endBatch();
 		renderActors(world, c, ms, msLocal, buffer);
 	}
 
@@ -172,7 +172,7 @@ public class ContraptionRenderDispatcher {
 				context.world = world;
 			Template.BlockInfo blockInfo = actor.getLeft();
 			for (MatrixStack m : matrixStacks) {
-				m.push();
+				m.pushPose();
 				MatrixStacker.of(m)
 						.translate(blockInfo.pos);
 			}
@@ -182,7 +182,7 @@ public class ContraptionRenderDispatcher {
 				movementBehaviour.renderInContraption(context, ms, msLocal, buffer);
 
 			for (MatrixStack m : matrixStacks)
-				m.pop();
+				m.popPose();
 		}
 	}
 
@@ -192,14 +192,14 @@ public class ContraptionRenderDispatcher {
 	}
 
 	public static BufferBuilder buildStructure(Contraption c, RenderType layer) {
-		if (renderWorld == null || renderWorld.getWorld() != Minecraft.getInstance().world)
-			renderWorld = new PlacementSimulationWorld(Minecraft.getInstance().world);
+		if (renderWorld == null || renderWorld.getLevel() != Minecraft.getInstance().level)
+			renderWorld = new PlacementSimulationWorld(Minecraft.getInstance().level);
 
         ForgeHooksClient.setRenderLayer(layer);
         MatrixStack ms = new MatrixStack();
         BlockRendererDispatcher dispatcher = Minecraft.getInstance()
-            .getBlockRendererDispatcher();
-        BlockModelRenderer blockRenderer = dispatcher.getBlockModelRenderer();
+            .getBlockRenderer();
+        BlockModelRenderer blockRenderer = dispatcher.getModelRenderer();
         Random random = new Random();
         BufferBuilder builder = new BufferBuilder(DefaultVertexFormats.BLOCK.getIntegerSize());
         builder.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
@@ -207,26 +207,26 @@ public class ContraptionRenderDispatcher {
 
         for (Template.BlockInfo info : c.getBlocks()
             .values())
-            renderWorld.setBlockState(info.pos, info.state);
+            renderWorld.setBlockAndUpdate(info.pos, info.state);
 
         for (Template.BlockInfo info : c.getBlocks()
             .values()) {
             BlockState state = info.state;
 
-            if (state.getRenderType() == BlockRenderType.ENTITYBLOCK_ANIMATED)
+            if (state.getRenderShape() == BlockRenderType.ENTITYBLOCK_ANIMATED)
                 continue;
             if (!RenderTypeLookup.canRenderInLayer(state, layer))
                 continue;
 
-            IBakedModel originalModel = dispatcher.getModelForState(state);
-            ms.push();
+            IBakedModel originalModel = dispatcher.getBlockModel(state);
+            ms.pushPose();
             ms.translate(info.pos.getX(), info.pos.getY(), info.pos.getZ());
             blockRenderer.renderModel(renderWorld, originalModel, state, info.pos, ms, builder, true, random, 42,
-                OverlayTexture.DEFAULT_UV, EmptyModelData.INSTANCE);
-            ms.pop();
+                OverlayTexture.NO_OVERLAY, EmptyModelData.INSTANCE);
+            ms.popPose();
         }
 
-        builder.finishDrawing();
+        builder.end();
         renderWorld.clear();
         renderWorld = null;
         return builder;
@@ -240,25 +240,25 @@ public class ContraptionRenderDispatcher {
         for (float zOffset = offset; zOffset >= -offset; zOffset -= 2 * offset)
             for (float yOffset = offset; yOffset >= -offset; yOffset -= 2 * offset)
                 for (float xOffset = offset; xOffset >= -offset; xOffset -= 2 * offset) {
-                    pos.setPos(lx + xOffset, ly + yOffset, lz + zOffset);
-                    sky += world.getLightLevel(LightType.SKY, pos) / 8f;
-                    block += world.getLightLevel(LightType.BLOCK, pos) / 8f;
+                    pos.set(lx + xOffset, ly + yOffset, lz + zOffset);
+                    sky += world.getBrightness(LightType.SKY, pos) / 8f;
+                    block += world.getBrightness(LightType.BLOCK, pos) / 8f;
                 }
 
         return ((int) sky) << 20 | ((int) block) << 4;
     }
 
     public static int getLightOnContraption(World world, PlacementSimulationWorld renderWorld, BlockPos pos, BlockPos lightPos) {
-        int worldLight = WorldRenderer.getLightmapCoordinates(world, lightPos);
+        int worldLight = WorldRenderer.getLightColor(world, lightPos);
 
         if (renderWorld != null)
-            return getMaxBlockLight(worldLight, renderWorld.getLightLevel(LightType.BLOCK, pos));
+            return getMaxBlockLight(worldLight, renderWorld.getBrightness(LightType.BLOCK, pos));
 
         return worldLight;
     }
 
     public static int getMaxBlockLight(int packedLight, int blockLightValue) {
-        int unpackedBlockLight = LightTexture.getBlockLightCoordinates(packedLight);
+        int unpackedBlockLight = LightTexture.block(packedLight);
 
         if (blockLightValue > unpackedBlockLight) {
             packedLight = (packedLight & 0xFFFF0000) | (blockLightValue << 4);
@@ -268,11 +268,11 @@ public class ContraptionRenderDispatcher {
     }
 
 	public static int getLightOnContraption(MovementContext context) {
-		int entityId = context.contraption.entity.getEntityId();
+		int entityId = context.contraption.entity.getId();
 
 		RenderedContraption renderedContraption = renderers.get(entityId);
 		if (renderedContraption != null) {
-			return renderedContraption.renderWorld.getLightLevel(LightType.BLOCK, context.localPos);
+			return renderedContraption.renderWorld.getBrightness(LightType.BLOCK, context.localPos);
 		} else {
 			return -1;
 		}

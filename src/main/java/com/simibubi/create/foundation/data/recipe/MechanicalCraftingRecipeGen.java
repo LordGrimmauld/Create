@@ -15,13 +15,16 @@ import net.minecraft.util.IItemProvider;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.Tags;
 
+import com.simibubi.create.foundation.data.recipe.CreateRecipeProvider.GeneratedRecipe;
+import com.simibubi.create.foundation.data.recipe.CreateRecipeProvider.I;
+
 public class MechanicalCraftingRecipeGen extends CreateRecipeProvider {
 
 	GeneratedRecipe
 
 	CRUSHING_WHEEL = create(AllBlocks.CRUSHING_WHEEL::get).returns(2)
-		.recipe(b -> b.key('P', Ingredient.fromTag(ItemTags.PLANKS))
-			.key('S', Ingredient.fromTag(I.stone()))
+		.recipe(b -> b.key('P', Ingredient.of(ItemTags.PLANKS))
+			.key('S', Ingredient.of(I.stone()))
 			.key('A', I.andesite())
 			.patternLine(" AAA ")
 			.patternLine("AAPAA")
@@ -31,18 +34,18 @@ public class MechanicalCraftingRecipeGen extends CreateRecipeProvider {
 
 		INTEGRATED_CIRCUIT = create(AllItems.INTEGRATED_CIRCUIT::get).returns(1)
 			.recipe(b -> b.key('L', AllItems.LAPIS_SHEET.get())
-				.key('R', Ingredient.fromTag(I.redstone()))
+				.key('R', Ingredient.of(I.redstone()))
 				.key('Q', AllItems.POLISHED_ROSE_QUARTZ.get())
-				.key('C', Ingredient.fromTag(Tags.Items.NUGGETS_GOLD))
+				.key('C', Ingredient.of(Tags.Items.NUGGETS_GOLD))
 				.patternLine("  L  ")
 				.patternLine("RRQRR")
 				.patternLine(" CCC ")),
 
 		EXTENDO_GRIP = create(AllItems.EXTENDO_GRIP::get).returns(1)
-			.recipe(b -> b.key('L', Ingredient.fromTag(I.brass()))
+			.recipe(b -> b.key('L', Ingredient.of(I.brass()))
 				.key('R', I.cog())
 				.key('H', AllItems.BRASS_HAND.get())
-				.key('S', Ingredient.fromTag(Tags.Items.RODS_WOODEN))
+				.key('S', Ingredient.of(Tags.Items.RODS_WOODEN))
 				.patternLine(" L ")
 				.patternLine(" R ")
 				.patternLine("SSS")
@@ -50,16 +53,16 @@ public class MechanicalCraftingRecipeGen extends CreateRecipeProvider {
 				.patternLine(" H ")),
 
 		FURNACE_ENGINE = create(AllBlocks.FURNACE_ENGINE::get).returns(1)
-			.recipe(b -> b.key('P', Ingredient.fromTag(I.brassSheet()))
-				.key('B', Ingredient.fromTag(I.brass()))
-				.key('I', Ingredient.fromItems(Blocks.PISTON, Blocks.STICKY_PISTON))
+			.recipe(b -> b.key('P', Ingredient.of(I.brassSheet()))
+				.key('B', Ingredient.of(I.brass()))
+				.key('I', Ingredient.of(Blocks.PISTON, Blocks.STICKY_PISTON))
 				.key('C', I.brassCasing())
 				.patternLine("PPB")
 				.patternLine("PCI")
 				.patternLine("PPB")),
 
 		FLYWHEEL = create(AllBlocks.FLYWHEEL::get).returns(1)
-			.recipe(b -> b.key('B', Ingredient.fromTag(I.brass()))
+			.recipe(b -> b.key('B', Ingredient.of(I.brass()))
 				.key('C', I.brassCasing())
 				.patternLine(" BBB")
 				.patternLine("CB B")

@@ -35,7 +35,7 @@ public class StabilizedBearingMovementBehaviour extends MovementBehaviour {
 		IRenderTypeBuffer buffer) {
 		if (FastRenderDispatcher.available()) return;
 
-		Direction facing = context.state.get(BlockStateProperties.FACING);
+		Direction facing = context.state.getValue(BlockStateProperties.FACING);
 		PartialModel top = AllBlockPartials.BEARING_TOP;
 		SuperByteBuffer superBuffer = PartialBufferer.get(top, context.state);
 		float renderPartialTicks = AnimationTickHolder.getPartialTicks();
@@ -44,20 +44,20 @@ public class StabilizedBearingMovementBehaviour extends MovementBehaviour {
 		Quaternion orientation = BearingInstance.getBlockStateOrientation(facing);
 
 		// rotate against parent
-		float angle = getCounterRotationAngle(context, facing, renderPartialTicks) * facing.getAxisDirection().getOffset();
+		float angle = getCounterRotationAngle(context, facing, renderPartialTicks) * facing.getAxisDirection().getStep();
 
-		Quaternion rotation = facing.getUnitVector().getDegreesQuaternion(angle);
+		Quaternion rotation = facing.step().rotationDegrees(angle);
 
-		rotation.multiply(orientation);
+		rotation.mul(orientation);
 
 		orientation = rotation;
 
 		superBuffer.rotateCentered(orientation);
 
 		// render
-		superBuffer.light(msLocal.peek()
-			.getModel(), ContraptionRenderDispatcher.getLightOnContraption(context));
-		superBuffer.renderInto(ms, buffer.getBuffer(RenderType.getSolid()));
+		superBuffer.light(msLocal.last()
+			.pose(), ContraptionRenderDispatcher.getLightOnContraption(context));
+		superBuffer.renderInto(ms, buffer.getBuffer(RenderType.solid()));
 	}
 
 	@Override
@@ -85,11 +85,11 @@ public class StabilizedBearingMovementBehaviour extends MovementBehaviour {
 		} else if (entity instanceof OrientedContraptionEntity) {
 			OrientedContraptionEntity orientedCE = (OrientedContraptionEntity) entity;
 			if (axis.isVertical())
-				offset = -orientedCE.getYaw(renderPartialTicks);
+				offset = -orientedCE.getViewYRot(renderPartialTicks);
 			else {
 				if (orientedCE.isInitialOrientationPresent() && orientedCE.getInitialOrientation()
 						.getAxis() == axis)
-					offset = -orientedCE.getPitch(renderPartialTicks);
+					offset = -orientedCE.getViewXRot(renderPartialTicks);
 			}
 		}
 		return offset;

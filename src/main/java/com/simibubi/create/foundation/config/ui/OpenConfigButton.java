@@ -32,18 +32,18 @@ public class OpenConfigButton extends Button {
 	@Override
 	public void render(MatrixStack mstack, int mouseX, int mouseY, float pticks) {
 		super.render(mstack, mouseX, mouseY, pticks);
-		Minecraft.getInstance().getItemRenderer().renderItemIntoGUI(icon, x + 2, y + 2);
+		Minecraft.getInstance().getItemRenderer().renderGuiItem(icon, x + 2, y + 2);
 	}
 
 	public static void click(Button b) {
-		Minecraft.getInstance().displayGuiScreen(BaseConfigScreen.forCreate(Minecraft.getInstance().currentScreen));
+		Minecraft.getInstance().setScreen(BaseConfigScreen.forCreate(Minecraft.getInstance().screen));
 	}
 
 	public static class SingleMenuRow {
 		public final String left, right;
 		public SingleMenuRow(String left, String right) {
-			this.left = I18n.format(left);
-			this.right = I18n.format(right);
+			this.left = I18n.get(left);
+			this.right = I18n.get(right);
 		}
 		public SingleMenuRow(String center) {
 			this(center, center);

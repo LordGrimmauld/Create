@@ -57,17 +57,17 @@ public class LinkedControllerItemRenderer extends CustomRenderedItemModelRendere
 		float pt = AnimationTickHolder.getPartialTicks();
 		MatrixStacker msr = MatrixStacker.of(ms);
 
-		ms.push();
+		ms.pushPose();
 
 		Minecraft mc = Minecraft.getInstance();
-		boolean rightHanded = mc.gameSettings.mainHand == HandSide.RIGHT;
+		boolean rightHanded = mc.options.mainHand == HandSide.RIGHT;
 		TransformType mainHand =
 			rightHanded ? TransformType.FIRST_PERSON_RIGHT_HAND : TransformType.FIRST_PERSON_LEFT_HAND;
 		TransformType offHand =
 			rightHanded ? TransformType.FIRST_PERSON_LEFT_HAND : TransformType.FIRST_PERSON_RIGHT_HAND;
 
 		boolean active = false;
-		boolean noControllerInMain = !AllItems.LINKED_CONTROLLER.isIn(mc.player.getHeldItemMainhand());
+		boolean noControllerInMain = !AllItems.LINKED_CONTROLLER.isIn(mc.player.getMainHandItem());
 
 		if (transformType == mainHand || (transformType == offHand && noControllerInMain)) {
 			float equip = equipProgress.getValue(pt);
@@ -79,9 +79,9 @@ public class LinkedControllerItemRenderer extends CustomRenderedItemModelRendere
 		}
 
 		if (transformType == TransformType.GUI) {
-			if (stack == mc.player.getHeldItemMainhand())
+			if (stack == mc.player.getMainHandItem())
 				active = true;
-			if (stack == mc.player.getHeldItemOffhand() && noControllerInMain)
+			if (stack == mc.player.getOffhandItem() && noControllerInMain)
 				active = true;
 		}
 
@@ -89,7 +89,7 @@ public class LinkedControllerItemRenderer extends CustomRenderedItemModelRendere
 		renderer.render(active ? model.getPartial("powered") : model.getOriginalModel(), light);
 
 		if (!active) {
-			ms.pop();
+			ms.popPose();
 			return;
 		}
 
@@ -103,7 +103,7 @@ public class LinkedControllerItemRenderer extends CustomRenderedItemModelRendere
 			light = i << 20;
 		}
 
-		ms.push();
+		ms.pushPose();
 		msr.translate(2 * s, 0, 8 * s);
 		button(renderer, ms, light, pt, button, b, index++);
 		msr.translate(4 * s, 0, 0);
@@ -112,23 +112,23 @@ public class LinkedControllerItemRenderer extends CustomRenderedItemModelRendere
 		button(renderer, ms, light, pt, button, b, index++);
 		msr.translate(0, 0, -4 * s);
 		button(renderer, ms, light, pt, button, b, index++);
-		ms.pop();
+		ms.popPose();
 
 		msr.translate(3 * s, 0, 3 * s);
 		button(renderer, ms, light, pt, button, b, index++);
 		msr.translate(2 * s, 0, 0);
 		button(renderer, ms, light, pt, button, b, index++);
 
-		ms.pop();
+		ms.popPose();
 	}
 
 	protected void button(PartialItemModelRenderer renderer, MatrixStack ms, int light, float pt, IBakedModel button,
 		float b, int index) {
-		ms.push();
+		ms.pushPose();
 		ms.translate(0, b * buttons.get(index)
 			.getValue(pt), 0);
 		renderer.renderSolid(button, light);
-		ms.pop();
+		ms.popPose();
 	}
 
 }

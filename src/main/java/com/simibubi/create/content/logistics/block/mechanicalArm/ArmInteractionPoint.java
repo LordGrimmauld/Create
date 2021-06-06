@@ -143,7 +143,7 @@ public abstract class ArmInteractionPoint {
 	@Nullable
 	IItemHandler getHandler(World world) {
 		if (!cachedHandler.isPresent()) {
-			TileEntity te = world.getTileEntity(pos);
+			TileEntity te = world.getBlockEntity(pos);
 			if (te == null)
 				return null;
 			cachedHandler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, Direction.UP);
@@ -204,7 +204,7 @@ public abstract class ArmInteractionPoint {
 
 	static ArmInteractionPoint deserialize(IBlockReader world, BlockPos anchor, CompoundNBT nbt) {
 		BlockPos pos = NBTUtil.readBlockPos(nbt.getCompound("Pos"));
-		ArmInteractionPoint interactionPoint = createAt(world, pos.add(anchor));
+		ArmInteractionPoint interactionPoint = createAt(world, pos.offset(anchor));
 		if (interactionPoint == null)
 			return null;
 		interactionPoint.mode = NBTHelper.readEnum(nbt, "Mode", Mode.class);
@@ -215,7 +215,7 @@ public abstract class ArmInteractionPoint {
 
 		@Override
 		Vector3d getInteractionPositionVector() {
-			return Vector3d.of(pos).add(.5f, 1, .5f);
+			return Vector3d.atLowerCornerOf(pos).add(.5f, 1, .5f);
 		}
 
 	}
@@ -224,7 +224,7 @@ public abstract class ArmInteractionPoint {
 
 		@Override
 		Vector3d getInteractionPositionVector() {
-			return Vector3d.of(pos).add(.5f, 14 / 16f, .5f);
+			return Vector3d.atLowerCornerOf(pos).add(.5f, 14 / 16f, .5f);
 		}
 
 		@Override
@@ -238,8 +238,8 @@ public abstract class ArmInteractionPoint {
 
 		@Override
 		boolean isValid(IBlockReader reader, BlockPos pos, BlockState state) {
-			return AllBlocks.MECHANICAL_SAW.has(state) && state.get(SawBlock.FACING) == Direction.UP
-				&& ((KineticTileEntity) reader.getTileEntity(pos)).getSpeed() != 0;
+			return AllBlocks.MECHANICAL_SAW.has(state) && state.getValue(SawBlock.FACING) == Direction.UP
+				&& ((KineticTileEntity) reader.getBlockEntity(pos)).getSpeed() != 0;
 		}
 
 	}
@@ -266,7 +266,7 @@ public abstract class ArmInteractionPoint {
 
 		@Override
 		Vector3d getInteractionPositionVector() {
-			return Vector3d.of(pos).add(.5f, 13 / 16f, .5f);
+			return Vector3d.atLowerCornerOf(pos).add(.5f, 13 / 16f, .5f);
 		}
 
 		@Override
@@ -278,7 +278,7 @@ public abstract class ArmInteractionPoint {
 		@Override
 		IItemHandler getHandler(World world) {
 			return new InvWrapper(
-				((ComposterBlock) Blocks.COMPOSTER).createInventory(world.getBlockState(pos), world, pos));
+				((ComposterBlock) Blocks.COMPOSTER).getContainer(world.getBlockState(pos), world, pos));
 		}
 	}
 
@@ -291,14 +291,14 @@ public abstract class ArmInteractionPoint {
 
 		@Override
 		Direction getInteractionDirection() {
-			return state.get(DeployerBlock.FACING)
+			return state.getValue(DeployerBlock.FACING)
 				.getOpposite();
 		}
 
 		@Override
 		Vector3d getInteractionPositionVector() {
 			return super.getInteractionPositionVector()
-				.add(Vector3d.of(getInteractionDirection().getDirectionVec()).scale(.65f));
+				.add(Vector3d.atLowerCornerOf(getInteractionDirection().getNormal()).scale(.65f));
 		}
 
 	}
@@ -319,12 +319,12 @@ public abstract class ArmInteractionPoint {
 		ItemStack insert(World world, ItemStack stack, boolean simulate) {
 			ItemStack input = stack.copy();
 			if (!BlazeBurnerBlock.tryInsert(state, world, pos, input, false, true)
-				.getResult()
+				.getObject()
 				.isEmpty()) {
 				return stack;
 			}
 			ActionResult<ItemStack> res = BlazeBurnerBlock.tryInsert(state, world, pos, input, false, simulate);
-			return res.getType() == ActionResultType.SUCCESS
+			return res.getResult() == ActionResultType.SUCCESS
 				? ItemHandlerHelper.copyStackWithSize(stack, stack.getCount() - 1)
 				: stack;
 		}
@@ -343,13 +343,13 @@ public abstract class ArmInteractionPoint {
 
 		@Override
 		Direction getInteractionDirection() {
-			return state.get(MechanicalCrafterBlock.HORIZONTAL_FACING)
+			return state.getValue(MechanicalCrafterBlock.HORIZONTAL_FACING)
 				.getOpposite();
 		}
 
 		@Override
 		ItemStack extract(World world, int slot, int amount, boolean simulate) {
-			TileEntity te = world.getTileEntity(pos);
+			TileEntity te = world.getBlockEntity(pos);
 			if (!(te instanceof MechanicalCrafterTileEntity))
 				return ItemStack.EMPTY;
 			MechanicalCrafterTileEntity crafter = (MechanicalCrafterTileEntity) te;
@@ -363,7 +363,7 @@ public abstract class ArmInteractionPoint {
 		@Override
 		Vector3d getInteractionPositionVector() {
 			return super.getInteractionPositionVector()
-				.add(Vector3d.of(getInteractionDirection().getDirectionVec()).scale(.5f));
+				.add(Vector3d.atLowerCornerOf(getInteractionDirection().getNormal()).scale(.5f));
 		}
 
 	}
@@ -391,7 +391,7 @@ public abstract class ArmInteractionPoint {
 
 		@Override
 		ItemStack insert(World world, ItemStack stack, boolean simulate) {
-			TileEntity tileEntity = world.getTileEntity(pos);
+			TileEntity tileEntity = world.getBlockEntity(pos);
 			if (!(tileEntity instanceof JukeboxTileEntity))
 				return stack;
 			if (!(state.getBlock() instanceof JukeboxBlock))
@@ -405,9 +405,9 @@ public abstract class ArmInteractionPoint {
 				return stack;
 			ItemStack remainder = stack.copy();
 			ItemStack toInsert = remainder.split(1);
-			if (!simulate && !world.isRemote) {
-				jukeboxBlock.insertRecord(world, pos, state, toInsert);
-				world.playEvent(null, 1010, pos, Item.getIdFromItem(toInsert.getItem()));
+			if (!simulate && !world.isClientSide) {
+				jukeboxBlock.setRecord(world, pos, state, toInsert);
+				world.levelEvent(null, 1010, pos, Item.getId(toInsert.getItem()));
 				AllTriggers.triggerForNearbyPlayers(AllTriggers.MUSICAL_ARM, world, pos, 10);
 			}
 			return remainder;
@@ -415,7 +415,7 @@ public abstract class ArmInteractionPoint {
 
 		@Override
 		ItemStack extract(World world, int slot, int amount, boolean simulate) {
-			TileEntity tileEntity = world.getTileEntity(pos);
+			TileEntity tileEntity = world.getBlockEntity(pos);
 			if (!(tileEntity instanceof JukeboxTileEntity))
 				return ItemStack.EMPTY;
 			if (!(state.getBlock() instanceof JukeboxBlock))
@@ -424,10 +424,10 @@ public abstract class ArmInteractionPoint {
 			ItemStack itemstack = jukeboxTE.getRecord();
 			if (itemstack.isEmpty())
 				return ItemStack.EMPTY;
-			if (!simulate && !world.isRemote) {
-				world.playEvent(1010, pos, 0);
-				jukeboxTE.clear();
-				world.setBlockState(pos, state.with(JukeboxBlock.HAS_RECORD, false), 2);
+			if (!simulate && !world.isClientSide) {
+				world.levelEvent(1010, pos, 0);
+				jukeboxTE.clearContent();
+				world.setBlock(pos, state.setValue(JukeboxBlock.HAS_RECORD, false), 2);
 			}
 			return itemstack;
 		}
@@ -438,7 +438,7 @@ public abstract class ArmInteractionPoint {
 
 		@Override
 		boolean isValid(IBlockReader reader, BlockPos pos, BlockState state) {
-			return AllBlocks.BELT.has(state) && !(reader.getBlockState(pos.up())
+			return AllBlocks.BELT.has(state) && !(reader.getBlockState(pos.above())
 				.getBlock() instanceof BeltTunnelBlock);
 		}
 
@@ -477,8 +477,8 @@ public abstract class ArmInteractionPoint {
 		@Override
 		Vector3d getInteractionPositionVector() {
 			return VecHelper.getCenterOf(pos)
-				.add(Vector3d.of(FunnelBlock.getFunnelFacing(state)
-					.getDirectionVec()).scale(-.15f));
+				.add(Vector3d.atLowerCornerOf(FunnelBlock.getFunnelFacing(state)
+					.getNormal()).scale(-.15f));
 		}
 
 		@Override
@@ -502,7 +502,7 @@ public abstract class ArmInteractionPoint {
 			FilteringBehaviour filtering = TileEntityBehaviour.get(world, pos, FilteringBehaviour.TYPE);
 			InvManipulationBehaviour inserter = TileEntityBehaviour.get(world, pos, InvManipulationBehaviour.TYPE);
 			BlockState state = world.getBlockState(pos);
-			if (state.method_28500(BlockStateProperties.POWERED).orElse(false))
+			if (state.getOptionalValue(BlockStateProperties.POWERED).orElse(false))
 				return stack;
 			if (inserter == null)
 				return stack;
@@ -512,7 +512,7 @@ public abstract class ArmInteractionPoint {
 				inserter.simulate();
 			ItemStack insert = inserter.insert(stack);
 			if (!simulate && insert.getCount() != stack.getCount()) {
-				TileEntity tileEntity = world.getTileEntity(pos);
+				TileEntity tileEntity = world.getBlockEntity(pos);
 				if (tileEntity instanceof FunnelTileEntity) {
 					FunnelTileEntity funnelTileEntity = (FunnelTileEntity) tileEntity;
 					funnelTileEntity.onTransfer(stack);
@@ -526,8 +526,8 @@ public abstract class ArmInteractionPoint {
 		@Override
 		boolean isValid(IBlockReader reader, BlockPos pos, BlockState state) {
 			return state.getBlock() instanceof AbstractFunnelBlock
-				&& !(state.contains(FunnelBlock.EXTRACTING) && state.get(FunnelBlock.EXTRACTING))
-				&& !(state.contains(BeltFunnelBlock.SHAPE) && state.get(BeltFunnelBlock.SHAPE) == Shape.PUSHING);
+				&& !(state.hasProperty(FunnelBlock.EXTRACTING) && state.getValue(FunnelBlock.EXTRACTING))
+				&& !(state.hasProperty(BeltFunnelBlock.SHAPE) && state.getValue(BeltFunnelBlock.SHAPE) == Shape.PUSHING);
 		}
 
 		@Override

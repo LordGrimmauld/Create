@@ -16,7 +16,7 @@ public class FillingRecipe extends ProcessingRecipe<RecipeWrapper> {
 
 	@Override
 	public boolean matches(RecipeWrapper inv, World p_77569_2_) {
-		return ingredients.get(0).test(inv.getStackInSlot(0));
+		return ingredients.get(0).test(inv.getItem(0));
 	}
 
 	@Override

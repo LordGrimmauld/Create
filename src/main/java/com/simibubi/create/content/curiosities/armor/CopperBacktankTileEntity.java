@@ -40,12 +40,12 @@ public class CopperBacktankTileEntity extends KineticTileEntity implements IName
 		}
 
 		int max = getMaxAir();
-		if (world.isRemote) {
-			Vector3d centerOf = VecHelper.getCenterOf(pos);
+		if (level.isClientSide) {
+			Vector3d centerOf = VecHelper.getCenterOf(worldPosition);
 			Vector3d v = VecHelper.offsetRandomly(centerOf, Create.RANDOM, .65f);
 			Vector3d m = centerOf.subtract(v);
 			if (airLevel != max)
-				world.addParticle(new AirParticleData(1, .05f), v.x, v.y, v.z, m.x, m.y, m.z);
+				level.addParticle(new AirParticleData(1, .05f), v.x, v.y, v.z, m.x, m.y, m.z);
 			return;
 		}
 
@@ -103,15 +103,15 @@ public class CopperBacktankTileEntity extends KineticTileEntity implements IName
 	}
 
 	protected void playFilledEffect() {
-		AllSoundEvents.CONFIRM.playAt(world, pos, 0.4f, 1, true);
+		AllSoundEvents.CONFIRM.playAt(level, worldPosition, 0.4f, 1, true);
 		Vector3d baseMotion = new Vector3d(.25, 0.1, 0);
-		Vector3d baseVec = VecHelper.getCenterOf(pos);
+		Vector3d baseVec = VecHelper.getCenterOf(worldPosition);
 		for (int i = 0; i < 360; i += 10) {
 			Vector3d m = VecHelper.rotate(baseMotion, i, Axis.Y);
 			Vector3d v = baseVec.add(m.normalize()
 				.scale(.25f));
 
-			world.addParticle(ParticleTypes.SPIT, v.x, v.y, v.z, m.x, m.y, m.z);
+			level.addParticle(ParticleTypes.SPIT, v.x, v.y, v.z, m.x, m.y, m.z);
 		}
 	}
 
@@ -119,7 +119,7 @@ public class CopperBacktankTileEntity extends KineticTileEntity implements IName
 	public ITextComponent getName() {
 		return this.customName != null ? this.customName
 			: new TranslationTextComponent(AllItems.COPPER_BACKTANK.get()
-				.getTranslationKey());
+				.getDescriptionId());
 	}
 	
 	@Override

@@ -10,15 +10,17 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 
+import com.simibubi.create.foundation.item.ItemDescription.Palette;
+
 public class WipScription extends ItemDescription {
 
 	public WipScription(Palette palette) {
 		super(palette);
 		add(getLines(), Lang.translate("tooltip.workInProgress")
-			.formatted(TextFormatting.RED));
+			.withStyle(TextFormatting.RED));
 
 		int descriptions = 0;
-		while (I18n.hasKey("create.tooltip.randomWipDescription" + descriptions++))
+		while (I18n.exists("create.tooltip.randomWipDescription" + descriptions++))
 			;
 
 		if (--descriptions > 0) {
@@ -37,12 +39,12 @@ public class WipScription extends ItemDescription {
 	}
 
 	public static ITextComponent decorateName(ITextComponent name) {
-		return StringTextComponent.EMPTY.copy()
-			.append(name.copy()
-				.formatted(TextFormatting.GRAY, TextFormatting.STRIKETHROUGH))
+		return StringTextComponent.EMPTY.plainCopy()
+			.append(name.plainCopy()
+				.withStyle(TextFormatting.GRAY, TextFormatting.STRIKETHROUGH))
 			.append(" ")
 			.append(Lang.translate("tooltip.wip")
-				.formatted(TextFormatting.GOLD));
+				.withStyle(TextFormatting.GOLD));
 	}
 
 }

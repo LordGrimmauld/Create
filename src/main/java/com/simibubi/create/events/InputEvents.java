@@ -20,7 +20,7 @@ public class InputEvents {
 		int key = event.getKey();
 		boolean pressed = !(event.getAction() == 0);
 
-		if (Minecraft.getInstance().currentScreen != null)
+		if (Minecraft.getInstance().screen != null)
 			return;
 
 		CreateClient.SCHEMATIC_HANDLER.onKeyInput(key, pressed);
@@ -28,7 +28,7 @@ public class InputEvents {
 
 	@SubscribeEvent
 	public static void onMouseScrolled(MouseScrollEvent event) {
-		if (Minecraft.getInstance().currentScreen != null)
+		if (Minecraft.getInstance().screen != null)
 			return;
 
 		double delta = event.getScrollDelta();
@@ -41,7 +41,7 @@ public class InputEvents {
 
 	@SubscribeEvent
 	public static void onMouseInput(MouseInputEvent event) {
-		if (Minecraft.getInstance().currentScreen != null)
+		if (Minecraft.getInstance().screen != null)
 			return;
 
 		int button = event.getButton();

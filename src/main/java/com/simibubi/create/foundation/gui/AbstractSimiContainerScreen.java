@@ -40,12 +40,12 @@ public abstract class AbstractSimiContainerScreen<T extends Container> extends C
 	}
 
 	protected void setWindowSize(int width, int height) {
-		this.xSize = width;
-		this.ySize = height;
+		this.imageWidth = width;
+		this.imageHeight = height;
 	}
 
 	@Override
-	protected void drawForeground(MatrixStack p_230451_1_, int p_230451_2_, int p_230451_3_) {
+	protected void renderLabels(MatrixStack p_230451_1_, int p_230451_2_, int p_230451_3_) {
 		// no-op to prevent screen- and inventory-title from being rendered at incorrect location
 		// could also set this.titleX/Y and this.playerInventoryTitleX/Y to the proper values instead
 	}
@@ -53,7 +53,7 @@ public abstract class AbstractSimiContainerScreen<T extends Container> extends C
 	@Override
 	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 		partialTicks = Minecraft.getInstance()
-			.getRenderPartialTicks();
+			.getFrameTime();
 		renderBackground(matrixStack);
 		renderWindow(matrixStack, mouseX, mouseY, partialTicks);
 
@@ -65,7 +65,7 @@ public abstract class AbstractSimiContainerScreen<T extends Container> extends C
 		RenderSystem.enableAlphaTest();
 		RenderSystem.enableBlend();
 		RenderSystem.disableRescaleNormal();
-		RenderHelper.disableStandardItemLighting();
+		RenderHelper.turnOff();
 		RenderSystem.disableLighting();
 		RenderSystem.disableDepthTest();
 		renderWindowForeground(matrixStack, mouseX, mouseY, partialTicks);
@@ -91,8 +91,8 @@ public abstract class AbstractSimiContainerScreen<T extends Container> extends C
 		if (super.keyPressed(code, p_keyPressed_2_, p_keyPressed_3_))
 			return true;
 
-		InputMappings.Input mouseKey = InputMappings.getInputByCode(code, p_keyPressed_2_);
-		if (this.client.gameSettings.keyBindInventory.isActiveAndMatches(mouseKey)) {
+		InputMappings.Input mouseKey = InputMappings.getKey(code, p_keyPressed_2_);
+		if (this.minecraft.options.keyInventory.isActiveAndMatches(mouseKey)) {
 			this.onClose();
 			return true;
 		}
@@ -140,19 +140,19 @@ public abstract class AbstractSimiContainerScreen<T extends Container> extends C
 	protected abstract void renderWindow(MatrixStack ms, int mouseX, int mouseY, float partialTicks);
 
 	@Override
-	protected void drawBackground(MatrixStack p_230450_1_, float p_230450_2_, int p_230450_3_, int p_230450_4_) {
+	protected void renderBg(MatrixStack p_230450_1_, float p_230450_2_, int p_230450_3_, int p_230450_4_) {
 
 	}
 
 	protected void renderWindowForeground(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-		drawMouseoverTooltip(matrixStack, mouseX, mouseY);
+		renderTooltip(matrixStack, mouseX, mouseY);
 		for (Widget widget : widgets) {
 			if (!widget.isHovered())
 				continue;
 
 			if (widget instanceof AbstractSimiWidget) {
 				if (!((AbstractSimiWidget) widget).getToolTip().isEmpty())
-					renderTooltip(matrixStack, ((AbstractSimiWidget) widget).getToolTip(), mouseX, mouseY);
+					renderComponentTooltip(matrixStack, ((AbstractSimiWidget) widget).getToolTip(), mouseX, mouseY);
 
 			} else {
 				widget.renderToolTip(matrixStack, mouseX, mouseY);
@@ -171,7 +171,7 @@ public abstract class AbstractSimiContainerScreen<T extends Container> extends C
 				RenderSystem.disableAlphaTest();
 				RenderSystem.disableBlend();
 				Tessellator tessellator = Tessellator.getInstance();
-				BufferBuilder bufferbuilder = tessellator.getBuffer();
+				BufferBuilder bufferbuilder = tessellator.getBuilder();
 				double health = stack.getItem()
 					.getDurabilityForDisplay(stack);
 				int i = Math.round(13.0F - (float) health * 13.0F);
@@ -192,19 +192,19 @@ public abstract class AbstractSimiContainerScreen<T extends Container> extends C
 				RenderSystem.disableLighting();
 				RenderSystem.disableDepthTest();
 				RenderSystem.disableBlend();
-				matrixStack.push();
+				matrixStack.pushPose();
 
-				int guiScaleFactor = (int) client.getWindow()
-					.getGuiScaleFactor();
+				int guiScaleFactor = (int) minecraft.getWindow()
+					.getGuiScale();
 				matrixStack.translate(xPosition + 16.5f, yPosition + 16.5f, 0);
 				double scale = getItemCountTextScale();
 
 				matrixStack.scale((float) scale, (float) scale, 0);
-				matrixStack.translate(-fr.getStringWidth(s) - (guiScaleFactor > 1 ? 0 : -.5f),
-					-textRenderer.FONT_HEIGHT + (guiScaleFactor > 1 ? 1 : 1.75f), 0);
-				fr.drawWithShadow(matrixStack, s, 0, 0, textColor);
+				matrixStack.translate(-fr.width(s) - (guiScaleFactor > 1 ? 0 : -.5f),
+					-font.lineHeight + (guiScaleFactor > 1 ? 1 : 1.75f), 0);
+				fr.drawShadow(matrixStack, s, 0, 0, textColor);
 
-				matrixStack.pop();
+				matrixStack.popPose();
 				RenderSystem.enableBlend();
 				RenderSystem.enableLighting();
 				RenderSystem.enableDepthTest();
@@ -214,8 +214,8 @@ public abstract class AbstractSimiContainerScreen<T extends Container> extends C
 	}
 
 	public double getItemCountTextScale() {
-		int guiScaleFactor = (int) client.getWindow()
-			.getGuiScaleFactor();
+		int guiScaleFactor = (int) minecraft.getWindow()
+			.getGuiScale();
 		double scale = 1;
 		switch (guiScaleFactor) {
 		case 1:
@@ -252,7 +252,7 @@ public abstract class AbstractSimiContainerScreen<T extends Container> extends C
 			.color(red, green, blue, alpha)
 			.endVertex();
 		Tessellator.getInstance()
-			.draw();
+			.end();
 	}
 
 	/**

@@ -25,7 +25,7 @@ public class DrillActorInstance extends ActorInstance {
 
         BlockState state = context.state;
 
-        facing = state.get(DrillBlock.FACING);
+        facing = state.getValue(DrillBlock.FACING);
 
         Direction.Axis axis = facing.getAxis();
         float eulerX = AngleHelper.verticalAngle(facing);
@@ -34,7 +34,7 @@ public class DrillActorInstance extends ActorInstance {
         if (axis == Direction.Axis.Y)
             eulerY = 0;
         else
-            eulerY = facing.getHorizontalAngle() + ((axis == Direction.Axis.X) ? 180 : 0);
+            eulerY = facing.toYRot() + ((axis == Direction.Axis.X) ? 180 : 0);
 
         drillHead = renderMaterial.getModel(AllBlockPartials.DRILL_HEAD, state).createInstance();
 

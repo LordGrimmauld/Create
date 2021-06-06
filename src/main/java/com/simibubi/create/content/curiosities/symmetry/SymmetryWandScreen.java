@@ -68,7 +68,7 @@ public class SymmetryWandScreen extends AbstractSimiScreen {
 		int state =
 			currentElement instanceof TriplePlaneMirror ? 2 : currentElement instanceof CrossPlaneMirror ? 1 : 0;
 		areaType = new SelectionScrollInput(guiLeft + 45, guiTop + 21, 109, 18).forOptions(SymmetryMirror.getMirrors())
-			.titled(mirrorType.copy())
+			.titled(mirrorType.plainCopy())
 			.writingTo(labelType)
 			.setState(state);
 
@@ -107,7 +107,7 @@ public class SymmetryWandScreen extends AbstractSimiScreen {
 			widgets.remove(areaAlign);
 
 		areaAlign = new SelectionScrollInput(guiLeft + 45, guiTop + 43, 109, 18).forOptions(element.getAlignToolTips())
-			.titled(orientation.copy())
+			.titled(orientation.plainCopy())
 			.writingTo(labelAlign)
 			.setState(element.getOrientationIndex())
 			.calling(element::setOrientation);
@@ -118,7 +118,7 @@ public class SymmetryWandScreen extends AbstractSimiScreen {
 	@Override
 	protected void renderWindow(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 		AllGuiTextures.WAND_OF_SYMMETRY.draw(matrixStack, this, guiLeft, guiTop);
-		textRenderer.draw(matrixStack, wand.getDisplayName(), guiLeft + 11, guiTop + 4, 0x6B3802);
+		font.draw(matrixStack, wand.getHoverName(), guiLeft + 11, guiTop + 4, 0x6B3802);
 		renderBlock(matrixStack);
 		GuiGameElement.of(wand)
 				.scale(4)
@@ -128,33 +128,33 @@ public class SymmetryWandScreen extends AbstractSimiScreen {
 	}
 
 	protected void renderBlock(MatrixStack ms) {
-		ms.push();
+		ms.pushPose();
 		ms.translate(guiLeft + 26f, guiTop + 39, 20);
 		ms.scale(16, 16, 16);
-		ms.multiply(new Vector3f(.3f, 1f, 0f).getDegreesQuaternion(-22.5f));
+		ms.mulPose(new Vector3f(.3f, 1f, 0f).rotationDegrees(-22.5f));
 		currentElement.applyModelTransform(ms);
 		// RenderSystem.multMatrix(ms.peek().getModel());
 		GuiGameElement.of(currentElement.getModel())
 			.render(ms);
 
-		ms.pop();
+		ms.popPose();
 	}
 
 	@Override
 	public void removed() {
-		ItemStack heldItem = client.player.getHeldItem(hand);
+		ItemStack heldItem = minecraft.player.getItemInHand(hand);
 		CompoundNBT compound = heldItem.getTag();
 		compound.put(SymmetryWandItem.SYMMETRY, currentElement.writeToNbt());
 		heldItem.setTag(compound);
 		AllPackets.channel.send(PacketDistributor.SERVER.noArg(), new NbtPacket(heldItem, hand));
-		client.player.setHeldItem(hand, heldItem);
+		minecraft.player.setItemInHand(hand, heldItem);
 		super.removed();
 	}
 
 	@Override
 	public boolean mouseClicked(double x, double y, int button) {
 		if (confirmButton.isHovered()) {
-			Minecraft.getInstance().player.closeScreen();
+			Minecraft.getInstance().player.closeContainer();
 			return true;
 		}
 

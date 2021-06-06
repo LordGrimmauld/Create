@@ -18,22 +18,22 @@ import net.minecraft.world.chunk.Chunk;
 @Mixin(ClientPlayNetHandler.class)
 public class NetworkLightUpdateMixin {
 
-	@Inject(at = @At("TAIL"), method = "handleUpdateLight")
+	@Inject(at = @At("TAIL"), method = "handleLightUpdatePacked")
 	private void onLightPacket(SUpdateLightPacket packet, CallbackInfo ci) {
 		RenderWork.enqueue(() -> {
-			ClientWorld world = Minecraft.getInstance().world;
+			ClientWorld world = Minecraft.getInstance().level;
 
 			if (world == null)
 				return;
 
-			int chunkX = packet.getChunkX();
-			int chunkZ = packet.getChunkZ();
+			int chunkX = packet.getX();
+			int chunkZ = packet.getZ();
 
-			Chunk chunk = world.getChunkProvider()
+			Chunk chunk = world.getChunkSource()
 				.getChunk(chunkX, chunkZ, false);
 
 			if (chunk != null) {
-				chunk.getTileEntityMap()
+				chunk.getBlockEntities()
 					.values()
 					.forEach(tile -> {
 						CreateClient.KINETIC_RENDERER.get(world)

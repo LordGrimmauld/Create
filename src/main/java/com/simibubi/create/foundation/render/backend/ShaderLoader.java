@@ -71,7 +71,7 @@ public class ShaderLoader {
 	}
 
 	private void loadShaderSources(IResourceManager manager) {
-		Collection<ResourceLocation> allShaders = manager.getAllResourceLocations(SHADER_DIR, s -> {
+		Collection<ResourceLocation> allShaders = manager.listResources(SHADER_DIR, s -> {
 			for (String ext : EXTENSIONS) {
 				if (s.endsWith(ext)) return true;
 			}

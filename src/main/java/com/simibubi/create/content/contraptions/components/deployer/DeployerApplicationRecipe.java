@@ -24,9 +24,9 @@ public class DeployerApplicationRecipe extends ProcessingRecipe<RecipeWrapper> {
 	@Override
 	public boolean matches(RecipeWrapper inv, World p_77569_2_) {
 		return ingredients.get(0)
-			.test(inv.getStackInSlot(0))
+			.test(inv.getItem(0))
 			&& ingredients.get(1)
-				.test(inv.getStackInSlot(1));
+				.test(inv.getItem(1));
 	}
 
 	@Override
@@ -55,10 +55,10 @@ public class DeployerApplicationRecipe extends ProcessingRecipe<RecipeWrapper> {
 		return sandpaperRecipes.stream()
 			.map(r -> new ProcessingRecipeBuilder<>(DeployerApplicationRecipe::new, Create.asResource(r.getId()
 				.getPath() + "_using_deployer"))
-					.require(Ingredient.fromItems(AllItems.SAND_PAPER.get(), AllItems.RED_SAND_PAPER.get()))
+					.require(Ingredient.of(AllItems.SAND_PAPER.get(), AllItems.RED_SAND_PAPER.get()))
 					.require(r.getIngredients()
 						.get(0))
-					.output(r.getRecipeOutput())
+					.output(r.getResultItem())
 					.build())
 			.collect(Collectors.toList());
 	}

@@ -20,9 +20,9 @@ public abstract class LinkedControllerPacketBase extends SimplePacketBase {
 				if (player == null)
 					return;
 
-				ItemStack heldItem = player.getHeldItemMainhand();
+				ItemStack heldItem = player.getMainHandItem();
 				if (!AllItems.LINKED_CONTROLLER.isIn(heldItem)) {
-					heldItem = player.getHeldItemOffhand();
+					heldItem = player.getOffhandItem();
 					if (!AllItems.LINKED_CONTROLLER.isIn(heldItem))
 						return;
 				}

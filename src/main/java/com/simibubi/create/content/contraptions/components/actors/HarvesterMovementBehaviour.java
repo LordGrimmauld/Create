@@ -1,6 +1,5 @@
 package com.simibubi.create.content.contraptions.components.actors;
 
-import static net.minecraft.block.HorizontalBlock.HORIZONTAL_FACING;
 
 import javax.annotation.Nullable;
 
@@ -32,11 +31,13 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
 
+import static net.minecraft.block.HorizontalBlock.FACING;
+
 public class HarvesterMovementBehaviour extends MovementBehaviour {
 
 	@Override
 	public boolean isActive(MovementContext context) {
-		return !VecHelper.isVecPointingTowards(context.relativeMotion, context.state.get(HORIZONTAL_FACING)
+		return !VecHelper.isVecPointingTowards(context.relativeMotion, context.state.getValue(FACING)
 			.getOpposite());
 	}
 
@@ -60,8 +61,8 @@ public class HarvesterMovementBehaviour extends MovementBehaviour {
 
 	@Override
 	public Vector3d getActiveAreaOffset(MovementContext context) {
-		return Vector3d.of(context.state.get(HORIZONTAL_FACING)
-			.getDirectionVec())
+		return Vector3d.atLowerCornerOf(context.state.getValue(FACING)
+			.getNormal())
 			.scale(.45);
 	}
 
@@ -71,7 +72,7 @@ public class HarvesterMovementBehaviour extends MovementBehaviour {
 		BlockState stateVisited = world.getBlockState(pos);
 		boolean notCropButCuttable = false;
 
-		if (world.isRemote)
+		if (world.isClientSide)
 			return;
 
 		if (!isValidCrop(world, pos, stateVisited)) {
@@ -84,14 +85,14 @@ public class HarvesterMovementBehaviour extends MovementBehaviour {
 		MutableBoolean seedSubtracted = new MutableBoolean(notCropButCuttable);
 		BlockState state = stateVisited;
 		BlockHelper.destroyBlock(world, pos, 1, stack -> {
-			if (!seedSubtracted.getValue() && stack.isItemEqual(new ItemStack(state.getBlock()))) {
+			if (!seedSubtracted.getValue() && stack.sameItem(new ItemStack(state.getBlock()))) {
 				stack.shrink(1);
 				seedSubtracted.setTrue();
 			}
 			dropItem(context, stack);
 		});
 
-		world.setBlockState(pos, cutCrop(world, pos, stateVisited));
+		world.setBlockAndUpdate(pos, cutCrop(world, pos, stateVisited));
 	}
 
 	private boolean isValidCrop(World world, BlockPos pos, BlockState state) {
@@ -107,10 +108,10 @@ public class HarvesterMovementBehaviour extends MovementBehaviour {
 				if (!(property instanceof IntegerProperty))
 					continue;
 				if (!property.getName()
-					.equals(BlockStateProperties.AGE_0_1.getName()))
+					.equals(BlockStateProperties.AGE_1.getName()))
 					continue;
-				if (((IntegerProperty) property).getAllowedValues()
-					.size() - 1 != state.get((IntegerProperty) property)
+				if (((IntegerProperty) property).getPossibleValues()
+					.size() - 1 != state.getValue((IntegerProperty) property)
 						.intValue())
 					continue;
 				return true;
@@ -137,7 +138,7 @@ public class HarvesterMovementBehaviour extends MovementBehaviour {
 				if (!(property instanceof IntegerProperty))
 					continue;
 				if (!property.getName()
-					.equals(BlockStateProperties.AGE_0_1.getName()))
+					.equals(BlockStateProperties.AGE_1.getName()))
 					continue;
 				return false;
 			}
@@ -152,14 +153,14 @@ public class HarvesterMovementBehaviour extends MovementBehaviour {
 	private BlockState cutCrop(World world, BlockPos pos, BlockState state) {
 		if (state.getBlock() instanceof CropsBlock) {
 			CropsBlock crop = (CropsBlock) state.getBlock();
-			return crop.withAge(0);
+			return crop.getStateForAge(0);
 		}
 		if (state.getBlock() == Blocks.SUGAR_CANE || state.getBlock() == Blocks.KELP) {
 			if (state.getFluidState()
 				.isEmpty())
-				return Blocks.AIR.getDefaultState();
+				return Blocks.AIR.defaultBlockState();
 			return state.getFluidState()
-				.getBlockState();
+				.createLegacyBlock();
 		}
 		if (state.getCollisionShape(world, pos)
 			.isEmpty() || state.getBlock() instanceof CocoaBlock) {
@@ -167,17 +168,17 @@ public class HarvesterMovementBehaviour extends MovementBehaviour {
 				if (!(property instanceof IntegerProperty))
 					continue;
 				if (!property.getName()
-					.equals(BlockStateProperties.AGE_0_1.getName()))
+					.equals(BlockStateProperties.AGE_1.getName()))
 					continue;
-				return state.with((IntegerProperty) property, Integer.valueOf(0));
+				return state.setValue((IntegerProperty) property, Integer.valueOf(0));
 			}
 		}
 
 		if (state.getFluidState()
 			.isEmpty())
-			return Blocks.AIR.getDefaultState();
+			return Blocks.AIR.defaultBlockState();
 		return state.getFluidState()
-			.getBlockState();
+			.createLegacyBlock();
 	}
 
 }

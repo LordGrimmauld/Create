@@ -34,7 +34,7 @@ public class DrillRenderer extends KineticTileEntityRenderer {
 		MatrixStack[] matrixStacks = new MatrixStack[]{ms, msLocal};
 		BlockState state = context.state;
 		SuperByteBuffer superBuffer = PartialBufferer.get(AllBlockPartials.DRILL_HEAD, state);
-		Direction facing = state.get(DrillBlock.FACING);
+		Direction facing = state.getValue(DrillBlock.FACING);
 
 		float speed = (float) (context.contraption.stalled
 				|| !VecHelper.isVecPointingTowards(context.relativeMotion, facing
@@ -51,9 +51,9 @@ public class DrillRenderer extends KineticTileEntityRenderer {
 				.unCentre();
 
 		superBuffer
-			.light(msLocal.peek()
-			.getModel())
-			.renderInto(ms, buffer.getBuffer(RenderType.getSolid()));
+			.light(msLocal.last()
+			.pose())
+			.renderInto(ms, buffer.getBuffer(RenderType.solid()));
 	}
 
 }

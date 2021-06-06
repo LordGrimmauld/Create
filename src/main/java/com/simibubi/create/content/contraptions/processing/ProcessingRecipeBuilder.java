@@ -42,7 +42,7 @@ public class ProcessingRecipeBuilder<T extends ProcessingRecipe<?>> {
 	}
 
 	public ProcessingRecipeBuilder<T> withItemIngredients(Ingredient... ingredients) {
-		return withItemIngredients(NonNullList.from(Ingredient.EMPTY, ingredients));
+		return withItemIngredients(NonNullList.of(Ingredient.EMPTY, ingredients));
 	}
 
 	public ProcessingRecipeBuilder<T> withItemIngredients(NonNullList<Ingredient> ingredients) {
@@ -55,7 +55,7 @@ public class ProcessingRecipeBuilder<T extends ProcessingRecipe<?>> {
 	}
 
 	public ProcessingRecipeBuilder<T> withItemOutputs(ProcessingOutput... outputs) {
-		return withItemOutputs(NonNullList.from(ProcessingOutput.EMPTY, outputs));
+		return withItemOutputs(NonNullList.of(ProcessingOutput.EMPTY, outputs));
 	}
 
 	public ProcessingRecipeBuilder<T> withItemOutputs(NonNullList<ProcessingOutput> outputs) {
@@ -64,7 +64,7 @@ public class ProcessingRecipeBuilder<T extends ProcessingRecipe<?>> {
 	}
 
 	public ProcessingRecipeBuilder<T> withFluidIngredients(FluidIngredient... ingredients) {
-		return withFluidIngredients(NonNullList.from(FluidIngredient.EMPTY, ingredients));
+		return withFluidIngredients(NonNullList.of(FluidIngredient.EMPTY, ingredients));
 	}
 
 	public ProcessingRecipeBuilder<T> withFluidIngredients(NonNullList<FluidIngredient> ingredients) {
@@ -73,7 +73,7 @@ public class ProcessingRecipeBuilder<T extends ProcessingRecipe<?>> {
 	}
 
 	public ProcessingRecipeBuilder<T> withFluidOutputs(FluidStack... outputs) {
-		return withFluidOutputs(NonNullList.from(FluidStack.EMPTY, outputs));
+		return withFluidOutputs(NonNullList.of(FluidStack.EMPTY, outputs));
 	}
 
 	public ProcessingRecipeBuilder<T> withFluidOutputs(NonNullList<FluidStack> outputs) {
@@ -106,11 +106,11 @@ public class ProcessingRecipeBuilder<T extends ProcessingRecipe<?>> {
 	// Datagen shortcuts
 
 	public ProcessingRecipeBuilder<T> require(ITag.INamedTag<Item> tag) {
-		return require(Ingredient.fromTag(tag));
+		return require(Ingredient.of(tag));
 	}
 
 	public ProcessingRecipeBuilder<T> require(IItemProvider item) {
-		return require(Ingredient.fromItems(item));
+		return require(Ingredient.of(item));
 	}
 
 	public ProcessingRecipeBuilder<T> require(Ingredient ingredient) {
@@ -236,7 +236,7 @@ public class ProcessingRecipeBuilder<T extends ProcessingRecipe<?>> {
 		}
 
 		@Override
-		public void serialize(JsonObject json) {
+		public void serializeRecipeData(JsonObject json) {
 			serializer.write(json, recipe);
 			if (recipeConditions.isEmpty())
 				return;
@@ -247,22 +247,22 @@ public class ProcessingRecipeBuilder<T extends ProcessingRecipe<?>> {
 		}
 
 		@Override
-		public ResourceLocation getID() {
+		public ResourceLocation getId() {
 			return id;
 		}
 
 		@Override
-		public IRecipeSerializer<?> getSerializer() {
+		public IRecipeSerializer<?> getType() {
 			return serializer;
 		}
 
 		@Override
-		public JsonObject getAdvancementJson() {
+		public JsonObject serializeAdvancement() {
 			return null;
 		}
 
 		@Override
-		public ResourceLocation getAdvancementID() {
+		public ResourceLocation getAdvancementId() {
 			return null;
 		}
 

@@ -41,8 +41,8 @@ public class TileEntityRenderHelper {
 	public static void renderTileEntities(World world, PlacementSimulationWorld renderWorld,
 		Iterable<TileEntity> customRenderTEs, MatrixStack ms, MatrixStack localTransform, IRenderTypeBuffer buffer,
 		float pt) {
-		Matrix4f matrix = localTransform.peek()
-			.getModel();
+		Matrix4f matrix = localTransform.last()
+			.pose();
 
 		for (Iterator<TileEntity> iterator = customRenderTEs.iterator(); iterator.hasNext();) {
 			TileEntity tileEntity = iterator.next();
@@ -54,17 +54,17 @@ public class TileEntityRenderHelper {
 				continue;
 			}
 
-			BlockPos pos = tileEntity.getPos();
-			ms.push();
+			BlockPos pos = tileEntity.getBlockPos();
+			ms.pushPose();
 			MatrixStacker.of(ms)
 				.translate(pos);
 
 			try {
 				Vector4f vec = new Vector4f(pos.getX() + .5f, pos.getY() + .5f, pos.getZ() + .5f, 1);
 				vec.transform(matrix);
-				BlockPos lightPos = new BlockPos(vec.getX(), vec.getY(), vec.getZ());
+				BlockPos lightPos = new BlockPos(vec.x(), vec.y(), vec.z());
 				int worldLight = ContraptionRenderDispatcher.getLightOnContraption(world, renderWorld, pos, lightPos);
-				renderer.render(tileEntity, pt, ms, buffer, worldLight, OverlayTexture.DEFAULT_UV);
+				renderer.render(tileEntity, pt, ms, buffer, worldLight, OverlayTexture.NO_OVERLAY);
 
 			} catch (Exception e) {
 				iterator.remove();
@@ -78,7 +78,7 @@ public class TileEntityRenderHelper {
 					Create.LOGGER.error(message);
 			}
 
-			ms.pop();
+			ms.popPose();
 		}
 	}
 

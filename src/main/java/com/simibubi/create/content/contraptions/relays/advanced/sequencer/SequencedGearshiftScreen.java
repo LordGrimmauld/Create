@@ -36,7 +36,7 @@ public class SequencedGearshiftScreen extends AbstractSimiScreen {
 
 	public SequencedGearshiftScreen(SequencedGearshiftTileEntity te) {
 		this.instructions = te.instructions;
-		this.pos = te.getPos();
+		this.pos = te.getBlockPos();
 		compareTag = Instruction.serializeAll(instructions);
 	}
 
@@ -142,14 +142,14 @@ public class SequencedGearshiftScreen extends AbstractSimiScreen {
 			label(matrixStack, 36, yOffset - 3, Lang.translate(def.translationKey));
 			if (def.hasValueParameter) {
 				String text = def.formatValue(instruction.value);
-				int stringWidth = textRenderer.getStringWidth(text);
+				int stringWidth = font.width(text);
 				label(matrixStack, 90 + (12 - stringWidth / 2), yOffset - 3, new StringTextComponent(text));
 			}
 			if (def.hasSpeedParameter)
 				label(matrixStack, 127, yOffset - 3, instruction.speedModifier.label);
 		}
 
-		textRenderer.drawWithShadow(matrixStack, title, guiLeft - 3 + (background.width - textRenderer.getWidth(title)) / 2, guiTop + 3,
+		font.drawShadow(matrixStack, title, guiLeft - 3 + (background.width - font.width(title)) / 2, guiTop + 3,
 			0xffffff);
 
 		GuiGameElement.of(renderedItem)
@@ -159,7 +159,7 @@ public class SequencedGearshiftScreen extends AbstractSimiScreen {
 	}
 
 	private void label(MatrixStack matrixStack, int x, int y, ITextComponent text) {
-		textRenderer.drawWithShadow(matrixStack, text, guiLeft + x, guiTop + 26 + y, 0xFFFFEE);
+		font.drawShadow(matrixStack, text, guiLeft + x, guiTop + 26 + y, 0xFFFFEE);
 	}
 
 	public void sendPacket() {
@@ -197,7 +197,7 @@ public class SequencedGearshiftScreen extends AbstractSimiScreen {
 	@Override
 	public boolean mouseClicked(double x, double y, int button) {
 		if (confirmButton.isHovered()) {
-			Minecraft.getInstance().player.closeScreen();
+			Minecraft.getInstance().player.closeContainer();
 			return true;
 		}
 

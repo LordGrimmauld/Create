@@ -36,7 +36,7 @@ public class PortableStorageInterfaceRenderer extends SafeTileEntityRenderer<Por
 		IRenderTypeBuffer buffer, int light, int overlay) {
 		BlockState blockState = te.getBlockState();
 		float progress = te.getExtensionDistance(partialTicks);
-		IVertexBuilder vb = buffer.getBuffer(RenderType.getSolid());
+		IVertexBuilder vb = buffer.getBuffer(RenderType.solid());
 		render(blockState, progress, te.isConnected(), sbb -> sbb.light(light)
 			.renderInto(ms, vb), ms);
 	}
@@ -45,7 +45,7 @@ public class PortableStorageInterfaceRenderer extends SafeTileEntityRenderer<Por
 		IRenderTypeBuffer buffer) {
 		BlockState blockState = context.state;
 		PortableStorageInterfaceTileEntity te = getTargetPSI(context);
-		IVertexBuilder vb = buffer.getBuffer(RenderType.getSolid());
+		IVertexBuilder vb = buffer.getBuffer(RenderType.solid());
 		float renderPartialTicks = AnimationTickHolder.getPartialTicks();
 
 		float progress = 0;
@@ -55,20 +55,20 @@ public class PortableStorageInterfaceRenderer extends SafeTileEntityRenderer<Por
 			lit = te.isConnected();
 		}
 
-		render(blockState, progress, lit, sbb -> sbb.light(msLocal.peek()
-			.getModel(), ContraptionRenderDispatcher.getLightOnContraption(context))
+		render(blockState, progress, lit, sbb -> sbb.light(msLocal.last()
+			.pose(), ContraptionRenderDispatcher.getLightOnContraption(context))
 			.renderInto(ms, vb), ms, msLocal);
 	}
 
 	private static void render(BlockState blockState, float progress, boolean lit,
 		Consumer<SuperByteBuffer> drawCallback, MatrixStack... matrixStacks) {
 		for (MatrixStack ms : matrixStacks)
-			ms.push();
+			ms.pushPose();
 
 		SuperByteBuffer middle = PartialBufferer.get(getMiddleForState(blockState, lit), blockState);
 		SuperByteBuffer top = PartialBufferer.get(getTopForState(blockState), blockState);
 
-		Direction facing = blockState.get(PortableStorageInterfaceBlock.FACING);
+		Direction facing = blockState.getValue(PortableStorageInterfaceBlock.FACING);
 		for (MatrixStack ms : matrixStacks)
 			MatrixStacker.of(ms)
 					.centre()
@@ -78,21 +78,21 @@ public class PortableStorageInterfaceRenderer extends SafeTileEntityRenderer<Por
 
 		for (MatrixStack ms : matrixStacks) {
 			ms.translate(0, progress / 2f, 0);
-			ms.push();
+			ms.pushPose();
 			ms.translate(0, 6 / 16f, 0);
 		}
 
 		drawCallback.accept(middle);
 
 		for (MatrixStack ms : matrixStacks) {
-			ms.pop();
+			ms.popPose();
 			ms.translate(0, progress / 2f, 0);
 		}
 
 		drawCallback.accept(top);
 
 		for (MatrixStack ms : matrixStacks)
-			ms.pop();
+			ms.popPose();
 	}
 
 	protected static PortableStorageInterfaceTileEntity getTargetPSI(MovementContext context) {
@@ -101,7 +101,7 @@ public class PortableStorageInterfaceRenderer extends SafeTileEntityRenderer<Por
 			return null;
 
 		BlockPos pos = NBTUtil.readBlockPos(context.data.getCompound(_workingPos_));
-		TileEntity tileEntity = context.world.getTileEntity(pos);
+		TileEntity tileEntity = context.world.getBlockEntity(pos);
 		if (!(tileEntity instanceof PortableStorageInterfaceTileEntity))
 			return null;
 

@@ -162,7 +162,7 @@ public class SubMenuConfigScreen extends ConfigScreen {
 				.withCallback((x, y) ->
 						new ConfirmationScreen()
 								.at(x, y)
-								.withText(ITextProperties.plain("You are about to reset all settings for the " + type.toString() + " config. Are you sure?"))
+								.withText(ITextProperties.of("You are about to reset all settings for the " + type.toString() + " config. Are you sure?"))
 								.withAction(success -> {
 									if (success)
 										resetConfig(spec.getValues());
@@ -182,7 +182,7 @@ public class SubMenuConfigScreen extends ConfigScreen {
 
 					new ConfirmationScreen()
 							.at(x, y)
-							.withText(ITextProperties.plain("You are about to change " + changes.size() + " value" + (changes.size() != 1 ? "s" : "") + ". Are you sure?"))
+							.withText(ITextProperties.of("You are about to change " + changes.size() + " value" + (changes.size() != 1 ? "s" : "") + ". Are you sure?"))
 							.withAction(success -> {
 								if (success)
 									saveChanges();
@@ -201,7 +201,7 @@ public class SubMenuConfigScreen extends ConfigScreen {
 
 					new ConfirmationScreen()
 							.at(x, y)
-							.withText(ITextProperties.plain("You are about to discard " + changes.size() + " unsaved change" + (changes.size() != 1 ? "s" : "") + ". Are you sure?"))
+							.withText(ITextProperties.of("You are about to discard " + changes.size() + " unsaved change" + (changes.size() != 1 ? "s" : "") + ". Are you sure?"))
 							.withAction(success -> {
 								if (success)
 									clearChanges();
@@ -223,7 +223,7 @@ public class SubMenuConfigScreen extends ConfigScreen {
 		widgets.add(discardChanges);
 		widgets.add(goBack);
 
-		list = new ConfigScreenList(client, listWidth, height - 60, 45, height - 15, 40);
+		list = new ConfigScreenList(minecraft, listWidth, height - 60, 45, height - 15, 40);
 		list.setLeftPos(this.width / 2 - list.getWidth() / 2);
 
 		children.add(list);
@@ -264,7 +264,7 @@ public class SubMenuConfigScreen extends ConfigScreen {
 			return;
 
 		list.isForServer = true;
-		boolean canEdit = client != null && client.player != null && client.player.hasPermissionLevel(2);
+		boolean canEdit = minecraft != null && minecraft.player != null && minecraft.player.hasPermissions(2);
 
 		Couple<Color> red = Theme.p(Theme.Key.BUTTON_FAIL);
 		Couple<Color> green = Theme.p(Theme.Key.BUTTON_SUCCESS);
@@ -281,13 +281,13 @@ public class SubMenuConfigScreen extends ConfigScreen {
 			stencil.withStencilRenderer((ms, w, h, alpha) -> AllIcons.I_CONFIG_LOCKED.draw(ms, 0, 0));
 			stencil.withElementRenderer((ms, w, h, alpha) -> UIRenderHelper.angledGradient(ms, 90, 8, 0, 16, 16, red));
 			serverLocked.withBorderColors(red);
-			serverLocked.getToolTip().add(new StringTextComponent("Locked").formatted(TextFormatting.BOLD));
+			serverLocked.getToolTip().add(new StringTextComponent("Locked").withStyle(TextFormatting.BOLD));
 			serverLocked.getToolTip().addAll(TooltipHelper.cutStringTextComponent("You don't have enough permissions to edit the server config. You can still look at the current values here though.", TextFormatting.GRAY, TextFormatting.GRAY));
 		} else {
 			stencil.withStencilRenderer((ms, w, h, alpha) -> AllIcons.I_CONFIG_UNLOCKED.draw(ms, 0, 0));
 			stencil.withElementRenderer((ms, w, h, alpha) -> UIRenderHelper.angledGradient(ms, 90, 8, 0, 16, 16, green));
 			serverLocked.withBorderColors(green);
-			serverLocked.getToolTip().add(new StringTextComponent("Unlocked").formatted(TextFormatting.BOLD));
+			serverLocked.getToolTip().add(new StringTextComponent("Unlocked").withStyle(TextFormatting.BOLD));
 			serverLocked.getToolTip().addAll(TooltipHelper.cutStringTextComponent("You have enough permissions to edit the server config. Changes you make here will be synced with the server when you save them.", TextFormatting.GRAY, TextFormatting.GRAY));
 		}
 
@@ -299,7 +299,7 @@ public class SubMenuConfigScreen extends ConfigScreen {
 		super.renderWindow(ms, mouseX, mouseY, partialTicks);
 
 		int x = width/2;
-		drawCenteredString(ms, client.fontRenderer, "Editing config: " + ConfigScreen.modID + ":" + type.toString().toLowerCase(Locale.ROOT) + "@" + title, x, 15, Theme.i(Theme.Key.TEXT));
+		drawCenteredString(ms, minecraft.font, "Editing config: " + ConfigScreen.modID + ":" + type.toString().toLowerCase(Locale.ROOT) + "@" + title, x, 15, Theme.i(Theme.Key.TEXT));
 
 		list.render(ms, mouseX, mouseY, partialTicks);
 	}
@@ -341,8 +341,8 @@ public class SubMenuConfigScreen extends ConfigScreen {
 		if (!changes.isEmpty() && parent instanceof BaseConfigScreen) {
 			new ConfirmationScreen()
 					.centered()
-					.addText(ITextProperties.plain("You still have " + changes.size() + " unsaved change" + (changes.size() != 1 ? "s" : "") + " for this config."))
-					.addText(ITextProperties.plain("Leaving this screen will discard them without saving. Are you sure?"))
+					.addText(ITextProperties.of("You still have " + changes.size() + " unsaved change" + (changes.size() != 1 ? "s" : "") + " for this config."))
+					.addText(ITextProperties.of("Leaving this screen will discard them without saving. Are you sure?"))
 					.withAction(success -> {
 						if (!success)
 							return;
@@ -365,8 +365,8 @@ public class SubMenuConfigScreen extends ConfigScreen {
 
 		new ConfirmationScreen()
 				.centered()
-				.addText(ITextProperties.plain("You still have " + changes.size() + " unsaved change" + (changes.size() != 1 ? "s" : "") + " for this config."))
-				.addText(ITextProperties.plain("Leaving this screen will discard them without saving. Are you sure?"))
+				.addText(ITextProperties.of("You still have " + changes.size() + " unsaved change" + (changes.size() != 1 ? "s" : "") + " for this config."))
+				.addText(ITextProperties.of("Leaving this screen will discard them without saving. Are you sure?"))
 				.withAction(success -> {
 					if (!success)
 						return;

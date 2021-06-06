@@ -21,7 +21,7 @@ public class PressingRecipe extends ProcessingRecipe<RecipeWrapper> {
 		if (inv.isEmpty())
 			return false;
 		return ingredients.get(0)
-			.test(inv.getStackInSlot(0));
+			.test(inv.getItem(0));
 	}
 
 	@Override

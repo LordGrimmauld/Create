@@ -104,7 +104,7 @@ public abstract class CreateRecipeCategory<T extends IRecipe<?>> implements IRec
 			ProcessingOutput output = results.get(slotIndex - 1);
 			float chance = output.getChance();
 			if (chance != 1)
-				tooltip.add(1, Lang.translate("recipe.processing.chance", chance < 0.01 ? "<1" : (int) (chance * 100)).formatted(TextFormatting.GOLD));
+				tooltip.add(1, Lang.translate("recipe.processing.chance", chance < 0.01 ? "<1" : (int) (chance * 100)).withStyle(TextFormatting.GOLD));
 		});
 	}
 
@@ -129,7 +129,7 @@ public abstract class CreateRecipeCategory<T extends IRecipe<?>> implements IRec
 
 		fluidStacks.addTooltipCallback((slotIndex, input, fluid, tooltip) -> {
 			if (fluid.getFluid()
-				.isEquivalentTo(AllFluids.POTION.get())) {
+				.isSame(AllFluids.POTION.get())) {
 				ITextComponent name = fluid.getDisplayName();
 				if (tooltip.isEmpty())
 					tooltip.add(0, name);
@@ -143,7 +143,7 @@ public abstract class CreateRecipeCategory<T extends IRecipe<?>> implements IRec
 			}
 
 			int amount = amounts.get(slotIndex);
-			ITextComponent text = (Lang.translate("generic.unit.millibuckets", amount)).formatted(TextFormatting.GOLD);
+			ITextComponent text = (Lang.translate("generic.unit.millibuckets", amount)).withStyle(TextFormatting.GOLD);
 			if (tooltip.isEmpty())
 				tooltip.add(0, text);
 			else {

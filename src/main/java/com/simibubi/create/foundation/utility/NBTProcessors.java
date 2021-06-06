@@ -42,7 +42,7 @@ public final class NBTProcessors {
 		});
 		addSurvivalProcessor(AllTileEntities.FUNNEL.get(), data -> {
 			if (data.contains("Filter")) {
-				ItemStack filter = ItemStack.read(data.getCompound("Filter"));
+				ItemStack filter = ItemStack.of(data.getCompound("Filter"));
 				if (filter.getItem() instanceof FilterItem)
 					data.remove("Filter");
 			}
@@ -65,7 +65,7 @@ public final class NBTProcessors {
 				.apply(compound);
 		if (tileEntity instanceof MobSpawnerTileEntity)
 			return compound;
-		if (tileEntity.onlyOpsCanSetNbt())
+		if (tileEntity.onlyOpCanSetNbt())
 			return null;
 		return compound;
 	}

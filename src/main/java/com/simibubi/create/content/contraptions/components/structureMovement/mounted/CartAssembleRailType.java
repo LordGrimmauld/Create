@@ -21,9 +21,9 @@ public enum CartAssembleRailType implements IStringSerializable {
 	DETECTOR_RAIL(Blocks.DETECTOR_RAIL),
 	ACTIVATOR_RAIL(Blocks.ACTIVATOR_RAIL),
 	CONTROLLER_RAIL(AllBlocks.CONTROLLER_RAIL, blockState -> AllBlocks.CONTROLLER_RAIL.has(blockState)
-		&& blockState.contains(ControllerRailBlock.BACKWARDS) && !blockState.get(ControllerRailBlock.BACKWARDS)),
+		&& blockState.hasProperty(ControllerRailBlock.BACKWARDS) && !blockState.getValue(ControllerRailBlock.BACKWARDS)),
 	CONTROLLER_RAIL_BACKWARDS(AllBlocks.CONTROLLER_RAIL, blockState -> AllBlocks.CONTROLLER_RAIL.has(blockState)
-		&& blockState.contains(ControllerRailBlock.BACKWARDS) && blockState.get(ControllerRailBlock.BACKWARDS))
+		&& blockState.hasProperty(ControllerRailBlock.BACKWARDS) && blockState.getValue(ControllerRailBlock.BACKWARDS))
 	
 	;
 
@@ -52,7 +52,7 @@ public enum CartAssembleRailType implements IStringSerializable {
 	}
 	
 	@Override
-	public String getString() {
+	public String getSerializedName() {
 		return Lang.asId(name());
 	}
 

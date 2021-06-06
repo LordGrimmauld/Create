@@ -58,7 +58,7 @@ public abstract class SmartTileEntity extends SyncedTileEntity implements ITicka
 
 	@Override
 	public void tick() {
-		if (!initialized && hasWorld()) {
+		if (!initialized && hasLevel()) {
 			initialize();
 			initialized = true;
 		}
@@ -77,7 +77,7 @@ public abstract class SmartTileEntity extends SyncedTileEntity implements ITicka
 	}
 
 	@Override
-	public final CompoundNBT write(CompoundNBT compound) {
+	public final CompoundNBT save(CompoundNBT compound) {
 		write(compound, false);
 		return compound;
 	}
@@ -94,7 +94,7 @@ public abstract class SmartTileEntity extends SyncedTileEntity implements ITicka
 	}
 
 	@Override
-	public final void fromTag(BlockState state, CompoundNBT tag) {
+	public final void load(BlockState state, CompoundNBT tag) {
 		fromTag(state, tag, false);
 	}
 
@@ -110,7 +110,7 @@ public abstract class SmartTileEntity extends SyncedTileEntity implements ITicka
 
 			updateBehaviorList();
 		}
-		super.fromTag(state, compound);
+		super.load(state, compound);
 		behaviourList.forEach(tb -> tb.read(compound, clientPacket));
 	}
 
@@ -118,13 +118,13 @@ public abstract class SmartTileEntity extends SyncedTileEntity implements ITicka
 	 * Hook only these in future subclasses of STE
 	 */
 	protected void write(CompoundNBT compound, boolean clientPacket) {
-		super.write(compound);
+		super.save(compound);
 		behaviourList.forEach(tb -> tb.write(compound, clientPacket));
 	}
 
 	@Override
 	public void writeSafe(CompoundNBT compound, boolean clientPacket) {
-		super.write(compound);
+		super.save(compound);
 		behaviourList.forEach(tb -> {
 			if (tb.isSafeNBT())
 				tb.write(compound, clientPacket);
@@ -140,9 +140,9 @@ public abstract class SmartTileEntity extends SyncedTileEntity implements ITicka
 	}
 
 	@Override
-	public void remove() {
+	public void setRemoved() {
 		forEachBehaviour(TileEntityBehaviour::remove);
-		super.remove();
+		super.setRemoved();
 	}
 
 	public void setLazyTickRate(int slowTickRate) {

@@ -56,7 +56,7 @@ public class StockpileSwitchScreen extends AbstractSimiScreen {
 			.startWithValue(te.getState() ? 1 : 0);
 
 		offBelow = new ScrollInput(guiLeft + 36, guiTop + 40, 102, 18).withRange(0, 100)
-			.titled(StringTextComponent.EMPTY.copy())
+			.titled(StringTextComponent.EMPTY.plainCopy())
 			.calling(state -> {
 				lastModification = 0;
 				offBelow.titled(Lang.translate("gui.stockpile_switch.move_to_upper_at", state));
@@ -68,7 +68,7 @@ public class StockpileSwitchScreen extends AbstractSimiScreen {
 			.setState((int) (te.offWhenBelow * 100));
 
 		onAbove = new ScrollInput(guiLeft + 36, guiTop + 18, 102, 18).withRange(1, 101)
-			.titled(StringTextComponent.EMPTY.copy())
+			.titled(StringTextComponent.EMPTY.plainCopy())
 			.calling(state -> {
 				lastModification = 0;
 				onAbove.titled(Lang.translate("gui.stockpile_switch.move_to_lower_at", state));
@@ -100,7 +100,7 @@ public class StockpileSwitchScreen extends AbstractSimiScreen {
 
 		AllGuiTextures.STOCKSWITCH_POWERED_LANE.draw(matrixStack, this, guiLeft + 36, guiTop + (te.isInverted() ? 18 : 40));
 		AllGuiTextures.STOCKSWITCH_UNPOWERED_LANE.draw(matrixStack, this, guiLeft + 36, guiTop + (te.isInverted() ? 40 : 18));
-		textRenderer.drawWithShadow(matrixStack, title, guiLeft - 3 + (STOCKSWITCH.width - textRenderer.getWidth(title)) / 2, guiTop + 3,
+		font.drawShadow(matrixStack, title, guiLeft - 3 + (STOCKSWITCH.width - font.width(title)) / 2, guiTop + 3,
 			0xffffff);
 
 		AllGuiTextures sprite = AllGuiTextures.STOCKSWITCH_INTERVAL;
@@ -108,28 +108,28 @@ public class StockpileSwitchScreen extends AbstractSimiScreen {
 		float upperBound = onAbove.getState();
 
 		sprite.bind();
-		drawTexture(matrixStack, (int) (guiLeft + upperBound) + 37, guiTop + 18, (int) (sprite.startX + upperBound), sprite.startY,
+		blit(matrixStack, (int) (guiLeft + upperBound) + 37, guiTop + 18, (int) (sprite.startX + upperBound), sprite.startY,
 			(int) (sprite.width - upperBound), sprite.height);
-		drawTexture(matrixStack, guiLeft + 37, guiTop + 40, sprite.startX, sprite.startY, (int) (lowerBound), sprite.height);
+		blit(matrixStack, guiLeft + 37, guiTop + 40, sprite.startX, sprite.startY, (int) (lowerBound), sprite.height);
 
 		AllGuiTextures.STOCKSWITCH_ARROW_UP.draw(matrixStack, this, (int) (guiLeft + lowerBound + 36) - 2, guiTop + 35);
 		AllGuiTextures.STOCKSWITCH_ARROW_DOWN.draw(matrixStack, this, (int) (guiLeft + upperBound + 36) - 3, guiTop + 17);
 
 		if (te.currentLevel != -1) {
 			AllGuiTextures cursor = AllGuiTextures.STOCKSWITCH_CURSOR;
-			matrixStack.push();
+			matrixStack.pushPose();
 			matrixStack.translate(Math.min(99, this.cursor.getValue(partialTicks) * sprite.width),
 				cursorLane.getValue(partialTicks) * 22, 0);
 			cursor.draw(matrixStack, this, guiLeft + 34, guiTop + 19);
-			matrixStack.pop();
+			matrixStack.popPose();
 		}
 
-		matrixStack.push();
+		matrixStack.pushPose();
 		GuiGameElement.of(renderedItem)
 				.<GuiGameElement.GuiRenderBuilder>at(guiLeft + STOCKSWITCH.width + 15, guiTop + 40, -250)
 				.scale(5)
 				.render(matrixStack);
-		matrixStack.pop();
+		matrixStack.popPose();
 	}
 
 	@Override
@@ -156,7 +156,7 @@ public class StockpileSwitchScreen extends AbstractSimiScreen {
 	}
 
 	protected void send(boolean invert) {
-		AllPackets.channel.sendToServer(new ConfigureStockswitchPacket(te.getPos(), offBelow.getState() / 100f,
+		AllPackets.channel.sendToServer(new ConfigureStockswitchPacket(te.getBlockPos(), offBelow.getState() / 100f,
 			onAbove.getState() / 100f, invert));
 	}
 
@@ -165,7 +165,7 @@ public class StockpileSwitchScreen extends AbstractSimiScreen {
 		if (flipSignals.isHovered()) 
 			send(!te.isInverted());
 		if (confirmButton.isHovered()) {
-			Minecraft.getInstance().player.closeScreen();
+			Minecraft.getInstance().player.closeContainer();
 			return true;
 		}
 		return super.mouseClicked(x, y, button);

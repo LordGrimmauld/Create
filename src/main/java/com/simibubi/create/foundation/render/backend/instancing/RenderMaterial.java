@@ -40,7 +40,7 @@ public class RenderMaterial<P extends BasicProgram, MODEL extends InstancedModel
 	 * Creates a material that renders in the default layer (CUTOUT_MIPPED)
 	 */
 	public RenderMaterial(InstancedTileRenderer<?> renderer, ProgramSpec<P> programSpec, ModelFactory<MODEL> factory) {
-		this(renderer, programSpec, factory, type -> type == RenderType.getCutoutMipped());
+		this(renderer, programSpec, factory, type -> type == RenderType.cutoutMipped());
 	}
 
 	public RenderMaterial(InstancedTileRenderer<?> renderer, ProgramSpec<P> programSpec, ModelFactory<MODEL> factory, Predicate<RenderType> layerPredicate) {
@@ -112,8 +112,8 @@ public class RenderMaterial<P extends BasicProgram, MODEL extends InstancedModel
 	}
 
 	private MODEL buildModel(BlockState renderedState) {
-		BlockRendererDispatcher dispatcher = Minecraft.getInstance().getBlockRendererDispatcher();
-		return buildModel(dispatcher.getModelForState(renderedState), renderedState);
+		BlockRendererDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
+		return buildModel(dispatcher.getBlockModel(renderedState), renderedState);
 	}
 
 	private MODEL buildModel(IBakedModel model, BlockState renderedState) {

@@ -93,11 +93,11 @@ public class BoxWidget extends ElementWidget {
 	protected void beforeRender(@Nonnull MatrixStack ms, int mouseX, int mouseY, float partialTicks) {
 		super.beforeRender(ms, mouseX, mouseY, partialTicks);
 
-		if (hovered != wasHovered) {
+		if (isHovered != wasHovered) {
 			startGradientAnimation(
 					getColorForState(true),
 					getColorForState(false),
-					hovered
+					isHovered
 			);
 		}
 
@@ -127,7 +127,7 @@ public class BoxWidget extends ElementWidget {
 
 		super.renderButton(ms, mouseX, mouseY, partialTicks);
 
-		wasHovered = hovered;
+		wasHovered = isHovered;
 	}
 
 	@Override
@@ -182,7 +182,7 @@ public class BoxWidget extends ElementWidget {
 		if (!active)
 			return Theme.p(Theme.Key.BUTTON_DISABLE).get(first);
 
-		if (hovered) {
+		if (isHovered) {
 			if (first)
 				return customBorderTop != null ? customBorderTop.darker() : Theme.c(Theme.Key.BUTTON_HOVER, true);
 			else

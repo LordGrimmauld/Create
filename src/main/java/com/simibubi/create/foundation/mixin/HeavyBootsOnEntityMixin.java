@@ -19,12 +19,12 @@ public abstract class HeavyBootsOnEntityMixin extends CapabilityProvider<Entity>
 
 	@Shadow
 	public abstract CompoundNBT getPersistentData();
-	
-	@Inject(at = @At("HEAD"), method = "canSwim", cancellable = true)
+
+	@Inject(at = @At("HEAD"), method = "isUnderWater", cancellable = true)
 	public void noSwimmingWithHeavyBootsOn(CallbackInfoReturnable<Boolean> cir) {
 		CompoundNBT persistentData = getPersistentData();
 		if (persistentData.contains("HeavyBoots"))
 			cir.setReturnValue(false);
 	}
-	
+
 }

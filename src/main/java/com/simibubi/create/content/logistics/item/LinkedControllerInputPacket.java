@@ -38,9 +38,9 @@ public class LinkedControllerInputPacket extends LinkedControllerPacketBase {
 
 	@Override
 	protected void handle(ServerPlayerEntity player, ItemStack heldItem) {
-		World world = player.getEntityWorld();
-		UUID uniqueID = player.getUniqueID();
-		BlockPos pos = player.getBlockPos();
+		World world = player.getCommandSenderWorld();
+		UUID uniqueID = player.getUUID();
+		BlockPos pos = player.blockPosition();
 
 		LinkedControllerServerHandler.receivePressed(world, pos, uniqueID, activatedButtons.stream()
 			.map(i -> LinkedControllerItem.toFrequency(heldItem, i))

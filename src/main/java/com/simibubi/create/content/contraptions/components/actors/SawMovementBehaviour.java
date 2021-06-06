@@ -26,22 +26,22 @@ public class SawMovementBehaviour extends BlockBreakingMovementBehaviour {
 
 	@Override
 	public boolean isActive(MovementContext context) {
-		return !VecHelper.isVecPointingTowards(context.relativeMotion, context.state.get(SawBlock.FACING)
+		return !VecHelper.isVecPointingTowards(context.relativeMotion, context.state.getValue(SawBlock.FACING)
 			.getOpposite());
 	}
 
 	@Override
 	public Vector3d getActiveAreaOffset(MovementContext context) {
-		return Vector3d.of(context.state.get(SawBlock.FACING).getDirectionVec()).scale(.65f);
+		return Vector3d.atLowerCornerOf(context.state.getValue(SawBlock.FACING).getNormal()).scale(.65f);
 	}
 
 	@Override
 	public void visitNewPosition(MovementContext context, BlockPos pos) {
 		super.visitNewPosition(context, pos);
-		Vector3d facingVec = Vector3d.of(context.state.get(SawBlock.FACING).getDirectionVec());
+		Vector3d facingVec = Vector3d.atLowerCornerOf(context.state.getValue(SawBlock.FACING).getNormal());
 		facingVec = context.rotation.apply(facingVec);
 
-		Direction closestToFacing = Direction.getFacingFromVector(facingVec.x, facingVec.y, facingVec.z);
+		Direction closestToFacing = Direction.getNearest(facingVec.x, facingVec.y, facingVec.z);
 		if(closestToFacing.getAxis().isVertical() && context.data.contains("BreakingPos")) {
 			context.data.remove("BreakingPos");
 			context.stall = false;
@@ -55,7 +55,7 @@ public class SawMovementBehaviour extends BlockBreakingMovementBehaviour {
 
 	@Override
 	protected void onBlockBroken(MovementContext context, BlockPos pos, BlockState brokenState) {
-		if (brokenState.isIn(BlockTags.LEAVES))
+		if (brokenState.is(BlockTags.LEAVES))
 			return;
 		TreeCutter.findTree(context.world, pos).destroyBlocks(context.world, null, (stack, dropPos) -> dropItemFromCutTree(context, stack, dropPos));
 	}
@@ -69,8 +69,8 @@ public class SawMovementBehaviour extends BlockBreakingMovementBehaviour {
 		Vector3d dropPos = VecHelper.getCenterOf(pos);
 		float distance = (float) dropPos.distanceTo(context.position);
 		ItemEntity entity = new ItemEntity(world, dropPos.x, dropPos.y, dropPos.z, remainder);
-		entity.setMotion(context.relativeMotion.scale(distance / 20f));
-		world.addEntity(entity);
+		entity.setDeltaMovement(context.relativeMotion.scale(distance / 20f));
+		world.addFreshEntity(entity);
 	}
 
 	@Override

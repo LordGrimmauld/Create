@@ -48,7 +48,7 @@ public class NixieTubeTileEntity extends SmartTileEntity {
 		super.tick();
 
 		// Dynamic text components have to be ticked manually and re-sent to the client
-		if (customText.isPresent() && world instanceof ServerWorld) {
+		if (customText.isPresent() && level instanceof ServerWorld) {
 			Pair<ITextComponent, Integer> textSection = customText.get();
 			textSection.setFirst(updateDynamicTextComponents(ITextComponent.Serializer.fromJson(rawCustomText)));
 
@@ -70,11 +70,11 @@ public class NixieTubeTileEntity extends SmartTileEntity {
 	}
 
 	public void displayCustomNameOf(ItemStack stack, int nixiePositionInRow) {
-		CompoundNBT compoundnbt = stack.getChildTag("display");
+		CompoundNBT compoundnbt = stack.getTagElement("display");
 		if (compoundnbt != null && compoundnbt.contains("Name", 8)) {
 			JsonElement fromJson = getJsonFromString(compoundnbt.getString("Name"));
 			ITextComponent displayed = ITextComponent.Serializer.fromJson(fromJson);
-			if (this.world instanceof ServerWorld)
+			if (this.level instanceof ServerWorld)
 				displayed = updateDynamicTextComponents(displayed);
 			this.customText = Optional.of(Pair.of(displayed, nixiePositionInRow));
 			this.rawCustomText = fromJson;
@@ -135,7 +135,7 @@ public class NixieTubeTileEntity extends SmartTileEntity {
 
 	protected ITextComponent updateDynamicTextComponents(ITextComponent customText) {
 		try {
-			return TextComponentUtils.parse(this.getCommandSource(null), customText,
+			return TextComponentUtils.updateForEntity(this.getCommandSource(null), customText,
 				(Entity) null, 0);
 		} catch (CommandSyntaxException e) {
 		}
@@ -149,10 +149,10 @@ public class NixieTubeTileEntity extends SmartTileEntity {
 				.getString();
 		ITextComponent itextcomponent =
 			(ITextComponent) (p_195539_1_ == null ? new StringTextComponent("Sign") : p_195539_1_.getDisplayName());
-		return new CommandSource(ICommandSource.field_213139_a_,
-			new Vector3d((double) this.pos.getX() + 0.5D, (double) this.pos.getY() + 0.5D,
-				(double) this.pos.getZ() + 0.5D),
-			Vector2f.ZERO, (ServerWorld) this.world, 2, s, itextcomponent, this.world.getServer(), p_195539_1_);
+		return new CommandSource(ICommandSource.NULL,
+			new Vector3d((double) this.worldPosition.getX() + 0.5D, (double) this.worldPosition.getY() + 0.5D,
+				(double) this.worldPosition.getZ() + 0.5D),
+			Vector2f.ZERO, (ServerWorld) this.level, 2, s, itextcomponent, this.level.getServer(), p_195539_1_);
 	}
 
 	private String charOrEmpty(String string, int index) {

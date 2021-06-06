@@ -16,17 +16,17 @@ public class BellMovementBehaviour extends MovementBehaviour {
 
 	@Override
 	public void onSpeedChanged(MovementContext context, Vector3d oldMotion, Vector3d motion) {
-		double dotProduct = oldMotion.dotProduct(motion);
+		double dotProduct = oldMotion.dot(motion);
 
 		if (dotProduct <= 0 && (context.relativeMotion.length() != 0) || context.firstMovement)
-			context.world.playSound(null, new BlockPos(context.position), SoundEvents.BLOCK_BELL_USE,
+			context.world.playSound(null, new BlockPos(context.position), SoundEvents.BELL_BLOCK,
 				SoundCategory.BLOCKS, 2.0F, 1.0F);
 	}
 
 	@Override
 	public void stopMoving(MovementContext context) {
 		if (context.position != null)
-			context.world.playSound(null, new BlockPos(context.position), SoundEvents.BLOCK_BELL_USE, SoundCategory.BLOCKS,
+			context.world.playSound(null, new BlockPos(context.position), SoundEvents.BELL_BLOCK, SoundCategory.BLOCKS,
 				2.0F, 1.0F);
 	}
 }

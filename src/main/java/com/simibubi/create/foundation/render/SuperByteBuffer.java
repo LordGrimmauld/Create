@@ -54,13 +54,13 @@ public class SuperByteBuffer extends TemplateBuffer {
 	}
 
 	public static float getUnInterpolatedU(TextureAtlasSprite sprite, float u) {
-		float f = sprite.getMaxU() - sprite.getMinU();
-		return (u - sprite.getMinU()) / f * 16.0F;
+		float f = sprite.getU1() - sprite.getU0();
+		return (u - sprite.getU0()) / f * 16.0F;
 	}
 
 	public static float getUnInterpolatedV(TextureAtlasSprite sprite, float v) {
-		float f = sprite.getMaxV() - sprite.getMinV();
-		return (v - sprite.getMinV()) / f * 16.0F;
+		float f = sprite.getV1() - sprite.getV0();
+		return (v - sprite.getV0()) / f * 16.0F;
 	}
 
 	private static final Long2DoubleMap skyLightCache = new Long2DoubleOpenHashMap();
@@ -75,17 +75,17 @@ public class SuperByteBuffer extends TemplateBuffer {
 			return;
 		((Buffer) buffer).rewind();
 
-		Matrix3f normalMat = transforms.peek()
-			.getNormal()
+		Matrix3f normalMat = transforms.last()
+			.normal()
 			.copy();
 		// normalMat.multiply(transforms.peek().getNormal());
 
-		Matrix4f modelMat = input.peek()
-			.getModel()
+		Matrix4f modelMat = input.last()
+			.pose()
 			.copy();
 
-		Matrix4f localTransforms = transforms.peek()
-			.getModel();
+		Matrix4f localTransforms = transforms.last()
+			.pose();
 		modelMat.multiply(localTransforms);
 
 		if (shouldLight && lightTransform != null) {
@@ -110,14 +110,14 @@ public class SuperByteBuffer extends TemplateBuffer {
 			float staticDiffuse = LightUtil.diffuseLight(normalX, normalY, normalZ);
 			normal.set(normalX, normalY, normalZ);
 			normal.transform(normalMat);
-			float nx = normal.getX();
-			float ny = normal.getY();
-			float nz = normal.getZ();
+			float nx = normal.x();
+			float ny = normal.y();
+			float nz = normal.z();
 			float instanceDiffuse = LightUtil.diffuseLight(nx, ny, nz);
 
 			pos.set(x, y, z, 1F);
 			pos.transform(modelMat);
-			builder.vertex(pos.getX(), pos.getY(), pos.getZ());
+			builder.vertex(pos.x(), pos.y(), pos.z());
 
 			// builder.color((byte) Math.max(0, nx * 255), (byte) Math.max(0, ny * 255), (byte) Math.max(0, nz * 255), a);
 			if (shouldColor) {
@@ -140,7 +140,7 @@ public class SuperByteBuffer extends TemplateBuffer {
 			if (spriteShiftFunc != null) {
 				spriteShiftFunc.shift(builder, u, v);
 			} else
-				builder.texture(u, v);
+				builder.uv(u, v);
 
 			if (shouldLight) {
 				int light = packedLightCoords;
@@ -149,14 +149,14 @@ public class SuperByteBuffer extends TemplateBuffer {
 					lightPos.transform(localTransforms);
 					lightPos.transform(lightTransform);
 
-					light = getLight(Minecraft.getInstance().world, lightPos);
+					light = getLight(Minecraft.getInstance().level, lightPos);
 					if (otherBlockLight >= 0) {
 						light = ContraptionRenderDispatcher.getMaxBlockLight(light, otherBlockLight);
 					}
 				}
-				builder.light(light);
+				builder.uv2(light);
 			} else
-				builder.light(getLight(buffer, i));
+				builder.uv2(getLight(buffer, i));
 
 			builder.normal(nx, ny, nz)
 				.endVertex();
@@ -188,27 +188,27 @@ public class SuperByteBuffer extends TemplateBuffer {
 	}
 
 	public SuperByteBuffer transform(MatrixStack stack) {
-		transforms.peek()
-			.getModel()
-			.multiply(stack.peek()
-				.getModel());
-		transforms.peek()
-			.getNormal()
-			.multiply(stack.peek()
-				.getNormal());
+		transforms.last()
+			.pose()
+			.multiply(stack.last()
+				.pose());
+		transforms.last()
+			.normal()
+			.mul(stack.last()
+				.normal());
 		return this;
 	}
 
 	public SuperByteBuffer rotate(Direction axis, float radians) {
 		if (radians == 0)
 			return this;
-		transforms.multiply(axis.getUnitVector()
-			.getRadialQuaternion(radians));
+		transforms.mulPose(axis.step()
+			.rotation(radians));
 		return this;
 	}
 
 	public SuperByteBuffer rotate(Quaternion q) {
-		transforms.multiply(q);
+		transforms.mulPose(q);
 		return this;
 	}
 
@@ -225,10 +225,10 @@ public class SuperByteBuffer extends TemplateBuffer {
 	public SuperByteBuffer shiftUV(SpriteShiftEntry entry) {
 		this.spriteShiftFunc = (builder, u, v) -> {
 			float targetU = entry.getTarget()
-				.getInterpolatedU((getUnInterpolatedU(entry.getOriginal(), u)));
+				.getU((getUnInterpolatedU(entry.getOriginal(), u)));
 			float targetV = entry.getTarget()
-				.getInterpolatedV((getUnInterpolatedV(entry.getOriginal(), v)));
-			builder.texture(targetU, targetV);
+				.getV((getUnInterpolatedV(entry.getOriginal(), v)));
+			builder.uv(targetU, targetV);
 		};
 		return this;
 	}
@@ -236,13 +236,13 @@ public class SuperByteBuffer extends TemplateBuffer {
 	public SuperByteBuffer shiftUVScrolling(SpriteShiftEntry entry, float scrollV) {
 		this.spriteShiftFunc = (builder, u, v) -> {
 			float targetU = u - entry.getOriginal()
-				.getMinU() + entry.getTarget()
-					.getMinU();
+				.getU0() + entry.getTarget()
+					.getU0();
 			float targetV = v - entry.getOriginal()
-				.getMinV() + entry.getTarget()
-					.getMinV()
+				.getV0() + entry.getTarget()
+					.getV0()
 				+ scrollV;
-			builder.texture(targetU, targetV);
+			builder.uv(targetU, targetV);
 		};
 		return this;
 	}
@@ -250,10 +250,10 @@ public class SuperByteBuffer extends TemplateBuffer {
 	public SuperByteBuffer shiftUVtoSheet(SpriteShiftEntry entry, float uTarget, float vTarget, int sheetSize) {
 		this.spriteShiftFunc = (builder, u, v) -> {
 			float targetU = entry.getTarget()
-				.getInterpolatedU((getUnInterpolatedU(entry.getOriginal(), u) / sheetSize) + uTarget * 16);
+				.getU((getUnInterpolatedU(entry.getOriginal(), u) / sheetSize) + uTarget * 16);
 			float targetV = entry.getTarget()
-				.getInterpolatedV((getUnInterpolatedV(entry.getOriginal(), v) / sheetSize) + vTarget * 16);
-			builder.texture(targetU, targetV);
+				.getV((getUnInterpolatedV(entry.getOriginal(), v) / sheetSize) + vTarget * 16);
+			builder.uv(targetU, targetV);
 		};
 		return this;
 	}
@@ -290,9 +290,9 @@ public class SuperByteBuffer extends TemplateBuffer {
 	private static int getLight(World world, Vector4f lightPos) {
 		BlockPos.Mutable pos = new BlockPos.Mutable();
 		double sky = 0, block = 0;
-		pos.setPos(lightPos.getX() + 0, lightPos.getY() + 0, lightPos.getZ() + 0);
-		sky += skyLightCache.computeIfAbsent(pos.toLong(), $ -> world.getLightLevel(LightType.SKY, pos));
-		block += blockLightCache.computeIfAbsent(pos.toLong(), $ -> world.getLightLevel(LightType.BLOCK, pos));
+		pos.set(lightPos.x() + 0, lightPos.y() + 0, lightPos.z() + 0);
+		sky += skyLightCache.computeIfAbsent(pos.asLong(), $ -> world.getBrightness(LightType.SKY, pos));
+		block += blockLightCache.computeIfAbsent(pos.asLong(), $ -> world.getBrightness(LightType.BLOCK, pos));
 		return ((int) sky) << 20 | ((int) block) << 4;
 	}
 

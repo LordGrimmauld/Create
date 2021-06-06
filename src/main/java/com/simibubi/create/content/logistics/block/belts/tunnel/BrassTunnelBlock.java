@@ -26,22 +26,22 @@ public class BrassTunnelBlock extends BeltTunnelBlock {
 	}
 
 	@Override
-	public BlockState updatePostPlacement(BlockState state, Direction facing, BlockState facingState, IWorld worldIn,
+	public BlockState updateShape(BlockState state, Direction facing, BlockState facingState, IWorld worldIn,
 		BlockPos currentPos, BlockPos facingPos) {
-		return super.updatePostPlacement(state, facing, facingState, worldIn, currentPos, facingPos);
+		return super.updateShape(state, facing, facingState, worldIn, currentPos, facingPos);
 	}
 
 	@Override
-	public void onReplaced(BlockState p_196243_1_, World p_196243_2_, BlockPos p_196243_3_, BlockState p_196243_4_,
+	public void onRemove(BlockState p_196243_1_, World p_196243_2_, BlockPos p_196243_3_, BlockState p_196243_4_,
 		boolean p_196243_5_) {
 		if (p_196243_1_.hasTileEntity()
 			&& (p_196243_1_.getBlock() != p_196243_4_.getBlock() || !p_196243_4_.hasTileEntity())) {
 			TileEntityBehaviour.destroy(p_196243_2_, p_196243_3_, FilteringBehaviour.TYPE);
 			withTileEntityDo(p_196243_2_, p_196243_3_, te -> {
 				if (te instanceof BrassTunnelTileEntity)
-					Block.spawnAsEntity(p_196243_2_, p_196243_3_, ((BrassTunnelTileEntity) te).stackToDistribute);
+					Block.popResource(p_196243_2_, p_196243_3_, ((BrassTunnelTileEntity) te).stackToDistribute);
 			});
-			p_196243_2_.removeTileEntity(p_196243_3_);
+			p_196243_2_.removeBlockEntity(p_196243_3_);
 		}
 	}
 

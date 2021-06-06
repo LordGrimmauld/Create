@@ -45,12 +45,12 @@ public abstract class AbstractFilterScreen<F extends AbstractFilterContainer> ex
 		setWindowSize(PLAYER_INVENTORY.width, background.height + PLAYER_INVENTORY.height + 20);
 		super.init();
 		widgets.clear();
-		int x = guiLeft - 50;
-		int offset = guiTop < 30 ? 30 - guiTop : 0;
-		extraAreas = ImmutableList.of(new Rectangle2d(x, guiTop + offset, background.width + 70, background.height - offset));
+		int x = leftPos - 50;
+		int offset = topPos < 30 ? 30 - topPos : 0;
+		extraAreas = ImmutableList.of(new Rectangle2d(x, topPos + offset, background.width + 70, background.height - offset));
 
-		resetButton = new IconButton(x + background.width - 62, guiTop + background.height - 24, AllIcons.I_TRASH);
-		confirmButton = new IconButton(x + background.width - 33, guiTop + background.height - 24, AllIcons.I_CONFIRM);
+		resetButton = new IconButton(x + background.width - 62, topPos + background.height - 24, AllIcons.I_TRASH);
+		confirmButton = new IconButton(x + background.width - 33, topPos + background.height - 24, AllIcons.I_CONFIRM);
 
 		widgets.add(resetButton);
 		widgets.add(confirmButton);
@@ -58,18 +58,18 @@ public abstract class AbstractFilterScreen<F extends AbstractFilterContainer> ex
 
 	@Override
 	protected void renderWindow(MatrixStack ms, int mouseX, int mouseY, float partialTicks) {
-		int x = guiLeft - 50;
-		int y = guiTop;
+		int x = leftPos - 50;
+		int y = topPos;
 		background.draw(ms, this, x, y);
 
-		int invX = guiLeft;
+		int invX = leftPos;
 		int invY = y + background.height + 10;
 		PLAYER_INVENTORY.draw(ms, this, invX, invY);
-		textRenderer.draw(ms, playerInventory.getDisplayName(), invX + 7, invY + 6, 0x666666);
-		textRenderer.draw(ms, I18n.format(container.contentHolder.getTranslationKey()), x + 15, y + 3, 0xdedede);
+		font.draw(ms, inventory.getDisplayName(), invX + 7, invY + 6, 0x666666);
+		font.draw(ms, I18n.get(menu.contentHolder.getDescriptionId()), x + 15, y + 3, 0xdedede);
 
-		GuiGameElement.of(container.contentHolder)
-				.<GuiGameElement.GuiRenderBuilder>at(x + background.width, guiTop + background.height - 60, -200)
+		GuiGameElement.of(menu.contentHolder)
+				.<GuiGameElement.GuiRenderBuilder>at(x + background.width, topPos + background.height - 60, -200)
 				.scale(5)
 				.render(ms);
 
@@ -81,9 +81,9 @@ public abstract class AbstractFilterScreen<F extends AbstractFilterContainer> ex
 		super.tick();
 		handleIndicators();
 
-		if (!container.player.getHeldItemMainhand()
-			.equals(container.contentHolder, false))
-			client.player.closeScreen();
+		if (!menu.player.getMainHandItem()
+			.equals(menu.contentHolder, false))
+			minecraft.player.closeContainer();
 	}
 
 	public void handleIndicators() {
@@ -140,13 +140,13 @@ public abstract class AbstractFilterScreen<F extends AbstractFilterContainer> ex
 
 		if (button == 0) {
 			if (confirmButton.isHovered()) {
-				client.player.closeScreen();
+				minecraft.player.closeContainer();
 				return true;
 			}
 			if (resetButton.isHovered()) {
-				container.clearContents();
+				menu.clearContents();
 				contentsCleared();
-				container.sendClearPacket();
+				menu.sendClearPacket();
 				return true;
 			}
 		}

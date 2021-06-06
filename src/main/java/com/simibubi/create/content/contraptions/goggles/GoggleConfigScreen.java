@@ -27,27 +27,27 @@ public class GoggleConfigScreen extends AbstractSimiScreen {
 	public GoggleConfigScreen() {
 		ITextComponent componentSpacing = new StringTextComponent("    ");
 		tooltip = new ArrayList<>();
-		tooltip.add(componentSpacing.copy()
+		tooltip.add(componentSpacing.plainCopy()
 			.append(Lang.translate("gui.config.overlay1")));
-		tooltip.add(componentSpacing.copy()
+		tooltip.add(componentSpacing.plainCopy()
 			.append(Lang.translate("gui.config.overlay2")
-				.formatted(TextFormatting.GRAY)));
+				.withStyle(TextFormatting.GRAY)));
 		tooltip.add(StringTextComponent.EMPTY);
-		tooltip.add(componentSpacing.copy()
+		tooltip.add(componentSpacing.plainCopy()
 			.append(Lang.translate("gui.config.overlay3")));
-		tooltip.add(componentSpacing.copy()
+		tooltip.add(componentSpacing.plainCopy()
 			.append(Lang.translate("gui.config.overlay4")));
 		tooltip.add(StringTextComponent.EMPTY);
-		tooltip.add(componentSpacing.copy()
+		tooltip.add(componentSpacing.plainCopy()
 			.append(Lang.translate("gui.config.overlay5")
-				.formatted(TextFormatting.GRAY)));
-		tooltip.add(componentSpacing.copy()
+				.withStyle(TextFormatting.GRAY)));
+		tooltip.add(componentSpacing.plainCopy()
 			.append(Lang.translate("gui.config.overlay6")
-				.formatted(TextFormatting.GRAY)));
+				.withStyle(TextFormatting.GRAY)));
 		tooltip.add(StringTextComponent.EMPTY);
-		tooltip.add(componentSpacing.copy()
+		tooltip.add(componentSpacing.plainCopy()
 			.append(Lang.translate("gui.config.overlay7")));
-		tooltip.add(componentSpacing.copy()
+		tooltip.add(componentSpacing.plainCopy()
 			.append(Lang.translate("gui.config.overlay8")));
 	}
 
@@ -55,9 +55,9 @@ public class GoggleConfigScreen extends AbstractSimiScreen {
 	protected void init() {
 		Minecraft mc = Minecraft.getInstance();
 		this.width = mc.getWindow()
-			.getScaledWidth();
+			.getGuiScaledWidth();
 		this.height = mc.getWindow()
-			.getScaledHeight();
+			.getGuiScaledHeight();
 
 		offsetX = AllConfigs.CLIENT.overlayOffsetX.get();
 		offsetY = AllConfigs.CLIENT.overlayOffsetY.get();
@@ -91,7 +91,7 @@ public class GoggleConfigScreen extends AbstractSimiScreen {
 		int titleLinesCount = 1;
 		int tooltipTextWidth = 0;
 		for (ITextProperties textLine : tooltip) {
-			int textLineWidth = getMinecraft().fontRenderer.getWidth(textLine);
+			int textLineWidth = getMinecraft().font.width(textLine);
 			if (textLineWidth > tooltipTextWidth)
 				tooltipTextWidth = textLineWidth;
 		}
@@ -110,7 +110,7 @@ public class GoggleConfigScreen extends AbstractSimiScreen {
 	protected void renderWindow(MatrixStack ms, int mouseX, int mouseY, float partialTicks) {
 		int posX = this.width / 2 + offsetX;
 		int posY = this.height / 2 + offsetY;
-		renderTooltip(ms, tooltip, posX, posY);
+		renderComponentTooltip(ms, tooltip, posX, posY);
 
 		// UIRenderHelper.breadcrumbArrow(ms, 50, 50, 100, 50, 20, 10, 0x80aa9999, 0x10aa9999);
 		// UIRenderHelper.breadcrumbArrow(ms, 100, 80, 0, -50, 20, -10, 0x80aa9999, 0x10aa9999);

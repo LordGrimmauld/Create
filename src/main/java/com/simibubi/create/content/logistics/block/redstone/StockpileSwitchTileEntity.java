@@ -57,7 +57,7 @@ public class StockpileSwitchTileEntity extends SmartTileEntity {
 		super.write(compound, clientPacket);
 	}
 
-	public float getLevel() {
+	public float getStockpileLevel() {
 		return currentLevel;
 	}
 
@@ -67,10 +67,10 @@ public class StockpileSwitchTileEntity extends SmartTileEntity {
 		if (!observedInventory.hasInventory()) {
 			if (currentLevel == -1)
 				return;
-			world.setBlockState(pos, getBlockState().with(StockpileSwitchBlock.INDICATOR, 0), 3);
+			level.setBlock(worldPosition, getBlockState().setValue(StockpileSwitchBlock.INDICATOR, 0), 3);
 			currentLevel = -1;
 			state = false;
-			world.updateNeighbors(pos, getBlockState().getBlock());
+			level.blockUpdated(worldPosition, getBlockState().getBlock());
 			sendData();
 			return;
 		}
@@ -109,9 +109,9 @@ public class StockpileSwitchTileEntity extends SmartTileEntity {
 		int displayLevel = 0;
 		if (currentLevel > 0)
 			displayLevel = (int) (currentLevel * 6);
-		world.setBlockState(pos, getBlockState().with(StockpileSwitchBlock.INDICATOR, displayLevel), update ? 3 : 2);
+		this.level.setBlock(worldPosition, getBlockState().setValue(StockpileSwitchBlock.INDICATOR, displayLevel), update ? 3 : 2);
 		if (update)
-			world.updateNeighbors(pos, getBlockState().getBlock());
+			this.level.blockUpdated(worldPosition, getBlockState().getBlock());
 		if (changed || update)
 			sendData();
 	}
@@ -119,7 +119,7 @@ public class StockpileSwitchTileEntity extends SmartTileEntity {
 	@Override
 	public void lazyTick() {
 		super.lazyTick();
-		if (world.isRemote)
+		if (level.isClientSide)
 			return;
 		updateCurrentLevel();
 	}
@@ -137,23 +137,23 @@ public class StockpileSwitchTileEntity extends SmartTileEntity {
 	public float getLevelForDisplay() {
 		return currentLevel == -1 ? 0 : currentLevel;
 	}
-	
+
 	public boolean getState() {
 		return state;
 	}
-	
+
 	public boolean isPowered() {
 		return inverted != state;
 	}
-	
+
 	public boolean isInverted() {
 		return inverted;
 	}
-	
+
 	public void setInverted(boolean inverted) {
 		if (inverted == this.inverted)
 			return;
 		this.inverted = inverted;
-		world.updateNeighbors(pos, getBlockState().getBlock());
+		level.blockUpdated(worldPosition, getBlockState().getBlock());
 	}
 }

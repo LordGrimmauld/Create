@@ -18,7 +18,7 @@ public class ContraptionEntityRenderer<C extends AbstractContraptionEntity> exte
 	}
 
 	@Override
-	public ResourceLocation getEntityTexture(C entity) {
+	public ResourceLocation getTextureLocation(C entity) {
 		return null;
 	}
 
@@ -42,21 +42,21 @@ public class ContraptionEntityRenderer<C extends AbstractContraptionEntity> exte
 		MatrixStack msLocal = translateTo(entity, AnimationTickHolder.getPartialTicks());
 		MatrixStack[] matrixStacks = new MatrixStack[] { ms, msLocal };
 
-		ms.push();
+		ms.pushPose();
 		entity.doLocalTransforms(partialTicks, matrixStacks);
 		Contraption contraption = entity.getContraption();
 		if (contraption != null) {
 			ContraptionRenderDispatcher.render(entity, ms, buffers, msLocal, contraption);
 		}
-		ms.pop();
+		ms.popPose();
 
 	}
 
 	protected MatrixStack translateTo(AbstractContraptionEntity entity, float pt) {
 		MatrixStack matrixStack = new MatrixStack();
-		double x = MathHelper.lerp(pt, entity.lastTickPosX, entity.getX());
-		double y = MathHelper.lerp(pt, entity.lastTickPosY, entity.getY());
-		double z = MathHelper.lerp(pt, entity.lastTickPosZ, entity.getZ());
+		double x = MathHelper.lerp(pt, entity.xOld, entity.getX());
+		double y = MathHelper.lerp(pt, entity.yOld, entity.getY());
+		double z = MathHelper.lerp(pt, entity.zOld, entity.getZ());
 		matrixStack.translate(x, y, z);
 		return matrixStack;
 	}

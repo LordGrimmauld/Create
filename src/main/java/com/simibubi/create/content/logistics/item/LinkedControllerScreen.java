@@ -36,20 +36,20 @@ public class LinkedControllerScreen extends AbstractSimiContainerScreen<LinkedCo
 	}
 
 	@Override
-	protected void drawMouseoverTooltip(MatrixStack ms, int x, int y) {
-		if (!this.client.player.inventory.getItemStack()
-			.isEmpty() || this.hoveredSlot == null || this.hoveredSlot.getHasStack()
-			|| hoveredSlot.inventory == container.playerInventory) {
-			super.drawMouseoverTooltip(ms, x, y);
+	protected void renderTooltip(MatrixStack ms, int x, int y) {
+		if (!this.minecraft.player.inventory.getCarried()
+			.isEmpty() || this.hoveredSlot == null || this.hoveredSlot.hasItem()
+			|| hoveredSlot.container == menu.playerInventory) {
+			super.renderTooltip(ms, x, y);
 			return;
 		}
-		renderWrappedToolTip(ms, addToTooltip(new LinkedList<>(), hoveredSlot.getSlotIndex()), x, y, textRenderer);
+		renderWrappedToolTip(ms, addToTooltip(new LinkedList<>(), hoveredSlot.getSlotIndex()), x, y, font);
 	}
 
 	@Override
 	public List<ITextComponent> getTooltipFromItem(ItemStack stack) {
 		List<ITextComponent> list = super.getTooltipFromItem(stack);
-		if (hoveredSlot.inventory == container.playerInventory)
+		if (hoveredSlot.container == menu.playerInventory)
 			return list;
 		return hoveredSlot != null ? addToTooltip(list, hoveredSlot.getSlotIndex()) : list;
 	}
@@ -61,9 +61,9 @@ public class LinkedControllerScreen extends AbstractSimiContainerScreen<LinkedCo
 			.createTranslationTextComponent("linked_controller.frequency_slot_" + ((slot % 2) + 1),
 				LinkedControllerClientHandler.getControls()
 					.get(slot / 2)
-					.getBoundKeyLocalizedText()
+					.getTranslatedKeyMessage()
 					.getString())
-			.formatted(TextFormatting.GOLD));
+			.withStyle(TextFormatting.GOLD));
 		return list;
 	}
 
@@ -72,13 +72,13 @@ public class LinkedControllerScreen extends AbstractSimiContainerScreen<LinkedCo
 		setWindowSize(PLAYER_INVENTORY.width + 50, background.height + PLAYER_INVENTORY.height + 20);
 		super.init();
 		widgets.clear();
-		int x = guiLeft - 50;
-		int offset = guiTop < 30 ? 30 - guiTop : 0;
+		int x = leftPos - 50;
+		int offset = topPos < 30 ? 30 - topPos : 0;
 		extraAreas =
-			ImmutableList.of(new Rectangle2d(x, guiTop + offset, background.width + 70, background.height - offset));
+			ImmutableList.of(new Rectangle2d(x, topPos + offset, background.width + 70, background.height - offset));
 
-		resetButton = new IconButton(x + background.width - 12, guiTop + background.height - 14, AllIcons.I_TRASH);
-		confirmButton = new IconButton(x + background.width + 16, guiTop + background.height - 14, AllIcons.I_CONFIRM);
+		resetButton = new IconButton(x + background.width - 12, topPos + background.height - 14, AllIcons.I_TRASH);
+		confirmButton = new IconButton(x + background.width + 16, topPos + background.height - 14, AllIcons.I_CONFIRM);
 
 		widgets.add(resetButton);
 		widgets.add(confirmButton);
@@ -86,18 +86,17 @@ public class LinkedControllerScreen extends AbstractSimiContainerScreen<LinkedCo
 
 	@Override
 	protected void renderWindow(MatrixStack ms, int mouseX, int mouseY, float partialTicks) {
-		int x = guiLeft;
-		int y = guiTop + 10;
+		int x = leftPos;
+		int y = topPos + 10;
 		background.draw(ms, this, x, y);
 
-		int invX = guiLeft + 14;
+		int invX = leftPos + 14;
 		int invY = y + background.height + 5;
 		PLAYER_INVENTORY.draw(ms, this, invX, invY);
-		textRenderer.draw(ms, playerInventory.getDisplayName(), invX + 7, invY + 6, 0x666666);
-		textRenderer.draw(ms, I18n.format(container.mainItem.getTranslationKey()), x + 15, y + 4, 0x442000);
+		font.draw(ms, inventory.getDisplayName(), invX + 7, invY + 6, 0x666666);
+		font.draw(ms, I18n.get(menu.mainItem.getDescriptionId()), x + 15, y + 4, 0x442000);
 
-		GuiGameElement.of(container.mainItem).<GuiGameElement
-			.GuiRenderBuilder>at(x + background.width - 8, guiTop + background.height - 53, -200)
+		GuiGameElement.of(menu.mainItem).<GuiGameElement.GuiRenderBuilder>at(x + background.width - 8, topPos + background.height - 53, -200)
 			.scale(5)
 			.render(ms);
 
@@ -106,9 +105,9 @@ public class LinkedControllerScreen extends AbstractSimiContainerScreen<LinkedCo
 	@Override
 	public void tick() {
 		super.tick();
-		if (!container.player.getHeldItemMainhand()
-			.equals(container.mainItem, false))
-			client.player.closeScreen();
+		if (!menu.player.getMainHandItem()
+			.equals(menu.mainItem, false))
+			minecraft.player.closeContainer();
 	}
 
 	@Override
@@ -117,12 +116,12 @@ public class LinkedControllerScreen extends AbstractSimiContainerScreen<LinkedCo
 
 		if (button == 0) {
 			if (confirmButton.isHovered()) {
-				client.player.closeScreen();
+				minecraft.player.closeContainer();
 				return true;
 			}
 			if (resetButton.isHovered()) {
-				container.clearContents();
-				container.sendClearPacket();
+				menu.clearContents();
+				menu.sendClearPacket();
 				return true;
 			}
 		}

@@ -35,11 +35,11 @@ public class SchematicPromptScreen extends AbstractSimiScreen {
 		AllGuiTextures background = AllGuiTextures.SCHEMATIC_PROMPT;
 		setWindowSize(background.width, background.height + 30);
 
-		nameField = new TextFieldWidget(textRenderer, guiLeft + 49, guiTop + 26, 131, 10, StringTextComponent.EMPTY);
+		nameField = new TextFieldWidget(font, guiLeft + 49, guiTop + 26, 131, 10, StringTextComponent.EMPTY);
 		nameField.setTextColor(-1);
-		nameField.setDisabledTextColour(-1);
-		nameField.setEnableBackgroundDrawing(false);
-		nameField.setMaxStringLength(35);
+		nameField.setTextColorUneditable(-1);
+		nameField.setBordered(false);
+		nameField.setMaxLength(35);
 		nameField.changeFocus(true);
 
 		abort = new IconButton(guiLeft + 7, guiTop + 53, AllIcons.I_TRASH);
@@ -63,7 +63,7 @@ public class SchematicPromptScreen extends AbstractSimiScreen {
 	@Override
 	protected void renderWindow(MatrixStack ms, int mouseX, int mouseY, float partialTicks) {
 		AllGuiTextures.SCHEMATIC_PROMPT.draw(ms, this, guiLeft, guiTop);
-		textRenderer.drawWithShadow(ms, title, guiLeft + (sWidth / 2) - (textRenderer.getWidth(title) / 2), guiTop + 3,
+		font.drawShadow(ms, title, guiLeft + (sWidth / 2) - (font.width(title) / 2), guiTop + 3,
 			0xffffff);
 		GuiGameElement.of(AllItems.SCHEMATIC.asStack())
 				.at(guiLeft + 22, guiTop + 23, 0)
@@ -91,7 +91,7 @@ public class SchematicPromptScreen extends AbstractSimiScreen {
 		}
 		if (abort.isHovered()) {
 			CreateClient.SCHEMATIC_AND_QUILL_HANDLER.discard();
-			Minecraft.getInstance().player.closeScreen();
+			Minecraft.getInstance().player.closeContainer();
 			return true;
 		}
 		if (convert.isHovered()) {
@@ -102,8 +102,8 @@ public class SchematicPromptScreen extends AbstractSimiScreen {
 	}
 
 	private void confirm(boolean convertImmediately) {
-		CreateClient.SCHEMATIC_AND_QUILL_HANDLER.saveSchematic(nameField.getText(), convertImmediately);
-		Minecraft.getInstance().player.closeScreen();
+		CreateClient.SCHEMATIC_AND_QUILL_HANDLER.saveSchematic(nameField.getValue(), convertImmediately);
+		Minecraft.getInstance().player.closeContainer();
 	}
 
 }

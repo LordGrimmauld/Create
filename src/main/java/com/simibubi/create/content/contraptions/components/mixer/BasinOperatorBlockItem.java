@@ -10,6 +10,8 @@ import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 
+import net.minecraft.item.Item.Properties;
+
 public class BasinOperatorBlockItem extends BlockItem {
 
 	public BasinOperatorBlockItem(Block block, Properties builder) {
@@ -17,24 +19,24 @@ public class BasinOperatorBlockItem extends BlockItem {
 	}
 
 	@Override
-	public ActionResultType tryPlace(BlockItemUseContext context) {
-		BlockPos placedOnPos = context.getPos()
-			.offset(context.getFace()
+	public ActionResultType place(BlockItemUseContext context) {
+		BlockPos placedOnPos = context.getClickedPos()
+			.relative(context.getClickedFace()
 				.getOpposite());
-		BlockState placedOnState = context.getWorld()
+		BlockState placedOnState = context.getLevel()
 			.getBlockState(placedOnPos);
 		if (AllBlocks.BASIN.has(placedOnState) || AllBlocks.BELT.has(placedOnState)
 			|| AllBlocks.DEPOT.has(placedOnState) || AllBlocks.WEIGHTED_EJECTOR.has(placedOnState)) {
-			if (context.getWorld()
-				.getBlockState(placedOnPos.up(2))
+			if (context.getLevel()
+				.getBlockState(placedOnPos.above(2))
 				.getMaterial()
 				.isReplaceable())
-				context = BlockItemUseContext.func_221536_a(context, placedOnPos.up(2), Direction.UP);
+				context = BlockItemUseContext.at(context, placedOnPos.above(2), Direction.UP);
 			else
 				return ActionResultType.FAIL;
 		}
 
-		return super.tryPlace(context);
+		return super.place(context);
 	}
 
 }

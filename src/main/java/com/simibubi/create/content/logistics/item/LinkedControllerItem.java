@@ -29,6 +29,8 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkHooks;
 import net.minecraftforge.items.ItemStackHandler;
 
+import net.minecraft.item.Item.Properties;
+
 public class LinkedControllerItem extends Item implements INamedContainerProvider {
 
 	public LinkedControllerItem(Properties p_i48487_1_) {
@@ -36,41 +38,41 @@ public class LinkedControllerItem extends Item implements INamedContainerProvide
 	}
 
 	@Override
-	public ActionResultType onItemUse(ItemUseContext ctx) {
+	public ActionResultType useOn(ItemUseContext ctx) {
 		PlayerEntity player = ctx.getPlayer();
 		if (player == null)
 			return ActionResultType.PASS;
-		World world = ctx.getWorld();
+		World world = ctx.getLevel();
 
-		if (!player.isSneaking() && player.isAllowEdit()
-			&& AllBlocks.REDSTONE_LINK.has(world.getBlockState(ctx.getPos()))) {
-			if (world.isRemote)
-				DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> this.toggleBindMode(ctx.getPos()));
-			player.getCooldownTracker()
-				.setCooldown(this, 2);
+		if (!player.isShiftKeyDown() && player.mayBuild()
+			&& AllBlocks.REDSTONE_LINK.has(world.getBlockState(ctx.getClickedPos()))) {
+			if (world.isClientSide)
+				DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> this.toggleBindMode(ctx.getClickedPos()));
+			player.getCooldowns()
+				.addCooldown(this, 2);
 			return ActionResultType.SUCCESS;
 		}
 
-		return onItemRightClick(world, player, ctx.getHand()).getType();
+		return use(world, player, ctx.getHand()).getResult();
 	}
 
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World world, PlayerEntity player, Hand hand) {
-		ItemStack heldItem = player.getHeldItem(hand);
+	public ActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
+		ItemStack heldItem = player.getItemInHand(hand);
 
-		if (player.isSneaking() && hand == Hand.MAIN_HAND) {
-			if (!world.isRemote && player instanceof ServerPlayerEntity && player.isAllowEdit())
+		if (player.isShiftKeyDown() && hand == Hand.MAIN_HAND) {
+			if (!world.isClientSide && player instanceof ServerPlayerEntity && player.mayBuild())
 				NetworkHooks.openGui((ServerPlayerEntity) player, this, buf -> {
-					buf.writeItemStack(heldItem);
+					buf.writeItem(heldItem);
 				});
 			return ActionResult.success(heldItem);
 		}
 
-		if (!player.isSneaking()) {
-			if (world.isRemote)
+		if (!player.isShiftKeyDown()) {
+			if (world.isClientSide)
 				DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> this::toggleActive);
-			player.getCooldownTracker()
-				.setCooldown(this, 2);
+			player.getCooldowns()
+				.addCooldown(this, 2);
 		}
 
 		return ActionResult.pass(heldItem);
@@ -90,7 +92,7 @@ public class LinkedControllerItem extends Item implements INamedContainerProvide
 		ItemStackHandler newInv = new ItemStackHandler(12);
 		if (AllItems.LINKED_CONTROLLER.get() != stack.getItem())
 			throw new IllegalArgumentException("Cannot get frequency items from non-controller: " + stack);
-		CompoundNBT invNBT = stack.getOrCreateChildTag("Items");
+		CompoundNBT invNBT = stack.getOrCreateTagElement("Items");
 		if (!invNBT.isEmpty())
 			newInv.deserializeNBT(invNBT);
 		return newInv;
@@ -104,13 +106,13 @@ public class LinkedControllerItem extends Item implements INamedContainerProvide
 
 	@Override
 	public Container createMenu(int id, PlayerInventory inv, PlayerEntity player) {
-		ItemStack heldItem = player.getHeldItemMainhand();
+		ItemStack heldItem = player.getMainHandItem();
 		return new LinkedControllerContainer(AllContainerTypes.LINKED_CONTROLLER.get(), id, inv, heldItem);
 	}
 
 	@Override
 	public ITextComponent getDisplayName() {
-		return new TranslationTextComponent(getTranslationKey());
+		return new TranslationTextComponent(getDescriptionId());
 	}
 
 }

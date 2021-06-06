@@ -49,7 +49,7 @@ public enum AllParticleTypes {
 
 	@OnlyIn(Dist.CLIENT)
 	public static void registerFactories(ParticleFactoryRegisterEvent event) {
-		ParticleManager particles = Minecraft.getInstance().particles;
+		ParticleManager particles = Minecraft.getInstance().particleEngine;
 		for (AllParticleTypes particle : values())
 			particle.entry.registerFactory(particles);
 	}

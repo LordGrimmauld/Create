@@ -68,7 +68,7 @@ public class RenderedContraption {
     }
 
     public int getEntityId() {
-        return contraption.entity.getEntityId();
+        return contraption.entity.getId();
     }
 
     public boolean isDead() {
@@ -96,18 +96,18 @@ public class RenderedContraption {
 
         MatrixStack stack = new MatrixStack();
 
-        double x = MathHelper.lerp(pt, entity.lastTickPosX, entity.getX()) - camX;
-        double y = MathHelper.lerp(pt, entity.lastTickPosY, entity.getY()) - camY;
-        double z = MathHelper.lerp(pt, entity.lastTickPosZ, entity.getZ()) - camZ;
+        double x = MathHelper.lerp(pt, entity.xOld, entity.getX()) - camX;
+        double y = MathHelper.lerp(pt, entity.yOld, entity.getY()) - camY;
+        double z = MathHelper.lerp(pt, entity.zOld, entity.getZ()) - camZ;
         stack.translate(x, y, z);
 
         entity.doLocalTransforms(pt, new MatrixStack[]{ stack });
 
-        model = stack.peek().getModel();
+        model = stack.last().pose();
 
         AxisAlignedBB lightBox = GridAlignedBB.toAABB(lighter.lightVolume.getTextureVolume());
 
-        this.lightBox = lightBox.offset(-camX, -camY, -camZ);
+        this.lightBox = lightBox.move(-camX, -camY, -camZ);
     }
 
     void setup(ContraptionProgram shader) {
@@ -138,7 +138,7 @@ public class RenderedContraption {
 
         renderLayers.clear();
 
-        List<RenderType> blockLayers = RenderType.getBlockLayers();
+        List<RenderType> blockLayers = RenderType.chunkBufferLayers();
 
         for (RenderType layer : blockLayers) {
             renderLayers.put(layer, buildStructureModel(renderWorld, contraption, layer));
@@ -150,11 +150,11 @@ public class RenderedContraption {
         if (!tileEntities.isEmpty()) {
             for (TileEntity te : tileEntities) {
                 if (te instanceof IInstanceRendered) {
-                    World world = te.getWorld();
-                    BlockPos pos = te.getPos();
-                    te.setLocation(renderWorld, pos);
+                    World world = te.getLevel();
+                    BlockPos pos = te.getBlockPos();
+                    te.setLevelAndPosition(renderWorld, pos);
                     kinetics.add(te);
-                    te.setLocation(world, pos);
+                    te.setLevelAndPosition(world, pos);
                 }
             }
         }
@@ -176,13 +176,13 @@ public class RenderedContraption {
 
         for (Template.BlockInfo info : c.getBlocks()
                                         .values())
-            renderWorld.setBlockState(info.pos, info.state);
+            renderWorld.setBlockAndUpdate(info.pos, info.state);
 
         WorldLightManager lighter = renderWorld.lighter;
 
-        renderWorld.chunkProvider.getLightSources().forEach((pos) -> lighter.func_215573_a(pos, renderWorld.getLightValue(pos)));
+        renderWorld.chunkProvider.getLightSources().forEach((pos) -> lighter.onBlockEmissionIncrease(pos, renderWorld.getLightEmission(pos)));
 
-        lighter.tick(Integer.MAX_VALUE, true, false);
+        lighter.runUpdates(Integer.MAX_VALUE, true, false);
 
         return renderWorld;
     }
@@ -192,8 +192,8 @@ public class RenderedContraption {
         ForgeHooksClient.setRenderLayer(layer);
         MatrixStack ms = new MatrixStack();
         BlockRendererDispatcher dispatcher = Minecraft.getInstance()
-                                                      .getBlockRendererDispatcher();
-        BlockModelRenderer blockRenderer = dispatcher.getBlockModelRenderer();
+                                                      .getBlockRenderer();
+        BlockModelRenderer blockRenderer = dispatcher.getModelRenderer();
         Random random = new Random();
         BufferBuilder builder = new BufferBuilder(DefaultVertexFormats.BLOCK.getIntegerSize());
         builder.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
@@ -202,20 +202,20 @@ public class RenderedContraption {
                                         .values()) {
             BlockState state = info.state;
 
-            if (state.getRenderType() == BlockRenderType.ENTITYBLOCK_ANIMATED)
+            if (state.getRenderShape() == BlockRenderType.ENTITYBLOCK_ANIMATED)
                 continue;
             if (!RenderTypeLookup.canRenderInLayer(state, layer))
                 continue;
 
-            IBakedModel originalModel = dispatcher.getModelForState(state);
-            ms.push();
+            IBakedModel originalModel = dispatcher.getBlockModel(state);
+            ms.pushPose();
             ms.translate(info.pos.getX(), info.pos.getY(), info.pos.getZ());
             blockRenderer.renderModel(renderWorld, originalModel, state, info.pos, ms, builder, true, random, 42,
-                                      OverlayTexture.DEFAULT_UV, EmptyModelData.INSTANCE);
-            ms.pop();
+                                      OverlayTexture.NO_OVERLAY, EmptyModelData.INSTANCE);
+            ms.popPose();
         }
 
-        builder.finishDrawing();
+        builder.end();
         return builder;
     }
 }

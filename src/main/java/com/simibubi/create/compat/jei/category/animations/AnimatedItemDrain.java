@@ -22,10 +22,10 @@ public class AnimatedItemDrain extends AnimatedKinetics {
 
 	@Override
 	public void draw(MatrixStack matrixStack, int xOffset, int yOffset) {
-		matrixStack.push();
+		matrixStack.pushPose();
 		matrixStack.translate(xOffset, yOffset, 100);
-		matrixStack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-15.5f));
-		matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(22.5f));
+		matrixStack.mulPose(Vector3f.XP.rotationDegrees(-15.5f));
+		matrixStack.mulPose(Vector3f.YP.rotationDegrees(22.5f));
 		int scale = 20;
 
 		GuiGameElement.of(AllBlocks.ITEM_DRAIN.getDefaultState())
@@ -33,14 +33,14 @@ public class AnimatedItemDrain extends AnimatedKinetics {
 			.render(matrixStack);
 
 		Impl buffer = IRenderTypeBuffer.immediate(Tessellator.getInstance()
-			.getBuffer());
+			.getBuilder());
 		MatrixStack ms = new MatrixStack();
 		ms.scale(scale, -scale, scale);
 		float from = 2/16f;
 		float to = 1f - from;
 		FluidRenderer.renderTiledFluidBB(fluid, from, from, from, to, 3/4f, to, buffer, ms, 0xf000f0, false);
-		buffer.draw();
+		buffer.endBatch();
 
-		matrixStack.pop();
+		matrixStack.popPose();
 	}
 }
